@@ -10,16 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Pushes to another repository
-        id: push_directory
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.HYUNJU_GITHUB_KEY }}
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          source-directory: '.' 
-          destination-github-username: hyun1211
-          destination-repository-name: AI-HUB-FE
-          user-email: ${{ secrets.HYUNJU_ACCOUNT_EMAIL }}
-          commit-message: ${{ github.event.commits[0].message }}
-          target-branch: main
-      - name: Test get variable exported by push-to-another-repository
-        run: echo $DESTINATION_CLONED_DIRECTORY  
+          token: ${{ secrets.HYUNJU_GITHUB_KEY }} 
+          repository-name: hyun1211/AI-HUB-FE           
+          branch: main         
+          folder: .        
+          clean: true        
+          git-config-name: hyun1211
+          git-config-email: ${{ secrets.HYUNJU_ACCOUNT_EMAIL }}
+          commit-message: ${{ github.event.commits[0].message }} # 원본 커밋 메시지 사용
