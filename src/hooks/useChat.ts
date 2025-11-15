@@ -5,12 +5,13 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [pastedImage, setPastedImage] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // SSE 스트리밍으로 메시지 전송
   const handleSendMessage = useCallback(
-    async (msg: string) => {
-      if (!msg.trim() || isStreaming) return;
+    async (msg: string, imageData?: string | null) => {
+      if ((!msg.trim() && !imageData) || isStreaming) return;
 
       // 사용자 메시지 추가
       const userMessage: Message = {
@@ -18,10 +19,12 @@ export function useChat() {
         content: msg,
         role: "user",
         timestamp: new Date(),
+        image: imageData || undefined,
       };
 
       setMessages((prev) => [...prev, userMessage]);
       setIsStreaming(true);
+      setPastedImage(null); // 이미지 초기화
 
       // AI 응답 메시지 생성 (빈 내용으로 시작)
       const assistantMessageId = (Date.now() + 1).toString();
@@ -44,7 +47,10 @@ export function useChat() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ message: msg }),
+          body: JSON.stringify({
+            message: msg,
+            hasImage: !!imageData
+          }),
           signal: abortControllerRef.current.signal,
         });
 
@@ -126,12 +132,12 @@ export function useChat() {
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (message.trim() && !isStreaming) {
-        handleSendMessage(message);
+      if ((message.trim() || pastedImage) && !isStreaming) {
+        handleSendMessage(message, pastedImage);
         setMessage("");
       }
     },
-    [message, isStreaming, handleSendMessage]
+    [message, pastedImage, isStreaming, handleSendMessage]
   );
 
   // 스트리밍 중단
@@ -142,6 +148,16 @@ export function useChat() {
     }
   }, []);
 
+  // 이미지 붙여넣기 처리
+  const handlePasteImage = useCallback((imageData: string) => {
+    setPastedImage(imageData);
+  }, []);
+
+  // 이미지 제거
+  const removePastedImage = useCallback(() => {
+    setPastedImage(null);
+  }, []);
+
   return {
     messages,
     message,
@@ -150,5 +166,8 @@ export function useChat() {
     handleSubmit,
     isStreaming,
     stopStreaming,
+    pastedImage,
+    handlePasteImage,
+    removePastedImage,
   };
 }

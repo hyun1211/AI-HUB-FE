@@ -37,14 +37,29 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                   : "bg-[rgba(245,245,245,0.15)] text-white border border-[#444648]"
               }`}
             >
-              <div className="font-['Pretendard:Regular',sans-serif] text-[15px] whitespace-pre-wrap break-words">
-                {message.content}
-                {message.role === "assistant" &&
-                  isStreaming &&
-                  message.id === messages[messages.length - 1]?.id && (
-                    <span className="inline-block w-[2px] h-[16px] bg-white ml-1 animate-pulse" />
-                  )}
-              </div>
+              {/* 이미지가 있으면 표시 */}
+              {message.image && (
+                <div className="mb-2">
+                  <img
+                    src={message.image}
+                    alt="Attached"
+                    className="max-w-full max-h-[200px] rounded-[8px]"
+                  />
+                </div>
+              )}
+
+              {/* 메시지 내용 */}
+              {message.content && (
+                <div className="font-['Pretendard:Regular',sans-serif] text-[15px] whitespace-pre-wrap break-words">
+                  {message.content}
+                  {message.role === "assistant" &&
+                    isStreaming &&
+                    message.id === messages[messages.length - 1]?.id && (
+                      <span className="inline-block w-[2px] h-[16px] bg-white ml-1 animate-pulse" />
+                    )}
+                </div>
+              )}
+
               <div className="text-[11px] opacity-60 mt-2">
                 {message.timestamp.toLocaleTimeString("ko-KR", {
                   hour: "2-digit",

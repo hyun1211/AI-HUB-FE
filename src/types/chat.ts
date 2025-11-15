@@ -15,4 +15,5 @@ export interface Message {
   content: string;
   role: "user" | "assistant";
   timestamp: Date;
+  image?: string; // base64 or blob URL
 }

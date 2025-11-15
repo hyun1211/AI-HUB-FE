@@ -12,7 +12,17 @@ import svgPathsMain from "@/assets/svgs/main";
 
 export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { messages, message, setMessage, handleSendMessage, handleSubmit, isStreaming } = useChat();
+  const {
+    messages,
+    message,
+    setMessage,
+    handleSendMessage,
+    handleSubmit,
+    isStreaming,
+    pastedImage,
+    handlePasteImage,
+    removePastedImage,
+  } = useChat();
 
   return (
     <div className="flex h-screen w-full bg-zinc-950 overflow-hidden">
@@ -79,7 +89,15 @@ export function ChatLayout() {
         <MessageList messages={messages} isStreaming={isStreaming} />
 
         {/* Chat Input */}
-        <ChatInput message={message} setMessage={setMessage} onSubmit={handleSubmit} isStreaming={isStreaming} />
+        <ChatInput
+          message={message}
+          setMessage={setMessage}
+          onSubmit={handleSubmit}
+          isStreaming={isStreaming}
+          pastedImage={pastedImage}
+          onPasteImage={handlePasteImage}
+          onRemoveImage={removePastedImage}
+        />
       </div>
     </div>
   );
