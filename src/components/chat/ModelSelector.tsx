@@ -45,7 +45,7 @@ export function ModelSelector() {
         </button>
 
         {isOpen && (
-          <div className="absolute top-[2.5rem] left-0 bg-zinc-950 rounded-[8px] border border-zinc-800 z-50 shadow-lg w-[calc(100vw-4rem)] max-w-[30rem] p-3">
+          <div className="absolute top-[3.5rem] left-0 bg-zinc-950 rounded-[8px] border border-zinc-800 z-50 shadow-lg w-[calc(100vw-4rem)] max-w-[30rem] p-3">
             <div className="flex flex-col gap-2">
               {AI_MODELS.map((model) => (
                 <button
