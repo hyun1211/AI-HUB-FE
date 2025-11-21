@@ -8,3 +8,7 @@ export type { ApiResponse, ApiErrorDetail };
 export interface LogoutRequest {
   refreshToken: string;
 }
+
+// 토큰 갱신 응답 타입
+// 실제 토큰은 HttpOnly 쿠키로 전송되므로 응답 본문은 비어있음
+export type TokenRefreshResponse = ApiResponse<null>;

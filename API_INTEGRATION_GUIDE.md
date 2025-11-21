@@ -554,6 +554,28 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - onSuccess, onError 콜백 지원
   - 에러 발생 시 throw (VALIDATION_ERROR, INVALID_TOKEN)
 
+### 5-11. 토큰 갱신
+
+- **엔드포인트**: `POST /api/token/refresh`
+- **타입**: `src/types/auth.ts` - `TokenRefreshResponse`
+- **API**: `src/lib/api/auth.ts` - `refreshToken()`
+- **훅**: `src/hooks/useTokenRefresh.ts` - `useTokenRefresh()`
+- **인증**: 필수 (refreshToken 쿠키)
+- **요청 필드**: 없음 (쿠키 기반)
+- **응답 필드**:
+  - success, detail (null), timestamp
+  - 실제 토큰은 Set-Cookie 헤더로 전송됨
+- **응답 쿠키**:
+  - `accessToken` (HttpOnly, Secure, SameSite=Strict, 1시간)
+  - `refreshToken` (HttpOnly, Secure, SameSite=Strict, 7일)
+- **특징**:
+  - refreshToken 쿠키를 사용해 새 토큰 회전 발급
+  - 기존 리프레시 토큰은 ROTATED 상태로 폐기됨
+  - 토큰은 HttpOnly 쿠키로 자동 관리 (XSS 방지)
+  - 요청 본문 없음, 응답 본문도 비어있음 (토큰은 쿠키로만 전송)
+  - onSuccess, onError 콜백 지원
+  - 에러 발생 시 throw (AUTHENTICATION_FAILED, TOKEN_REUSED)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
