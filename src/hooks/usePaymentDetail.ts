@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import { getPaymentDetail } from "@/lib/api/payment";
-import { PaymentDetail } from "@/types/payment";
+import { getPaymentDetail, cancelPayment } from "@/lib/api/payment";
+import {
+  PaymentDetail,
+  CancelPaymentRequest,
+  CancelPaymentResponse,
+} from "@/types/payment";
 
 interface UsePaymentDetailOptions {
   paymentId: number; // 결제 ID
@@ -14,6 +18,7 @@ export function usePaymentDetail(options: UsePaymentDetailOptions) {
   const [payment, setPayment] = useState<PaymentDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // 결제 상세 조회
   const fetchPaymentDetail = useCallback(async () => {
@@ -43,6 +48,38 @@ export function usePaymentDetail(options: UsePaymentDetailOptions) {
     await fetchPaymentDetail();
   }, [fetchPaymentDetail]);
 
+  // 결제 취소
+  const cancelPaymentRequest = useCallback(
+    async (
+      request: CancelPaymentRequest
+    ): Promise<CancelPaymentResponse | null> => {
+      if (!paymentId || paymentId <= 0) {
+        const error = new Error("유효한 결제 ID가 필요합니다.");
+        setError(error);
+        onError?.(error);
+        return null;
+      }
+
+      setIsCancelling(true);
+      setError(null);
+
+      try {
+        const response = await cancelPayment(paymentId, request);
+        // 취소 후 자동으로 결제 상세 정보 새로고침
+        await fetchPaymentDetail();
+        return response.detail;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("취소 요청 실패");
+        setError(error);
+        onError?.(error);
+        return null;
+      } finally {
+        setIsCancelling(false);
+      }
+    },
+    [paymentId, fetchPaymentDetail, onError]
+  );
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch && paymentId > 0) {
@@ -54,7 +91,9 @@ export function usePaymentDetail(options: UsePaymentDetailOptions) {
     payment,
     isLoading,
     error,
+    isCancelling,
     fetchPaymentDetail,
     refresh,
+    cancelPaymentRequest,
   };
 }

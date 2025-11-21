@@ -516,6 +516,28 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - paymentUrl로 리다이렉트하여 실제 결제 진행
   - 에러 발생 시 throw (CONFLICT: 이미 처리 중인 결제 존재)
 
+### 5-9. 결제 취소
+
+- **엔드포인트**: `POST /api/payments/{paymentId}/cancel`
+- **타입**: `src/types/payment.ts` - `CancelPaymentRequest`, `CancelPaymentResponse`
+- **API**: `src/lib/api/payment.ts` - `cancelPayment()`
+- **훅**: `src/hooks/usePaymentDetail.ts` - `usePaymentDetail().cancelPaymentRequest()`
+- **인증**: 필수 (쿠키 기반)
+- **경로 변수**:
+  - `paymentId` (number)
+- **요청 필드**:
+  - `reason` (필수, 취소 사유)
+- **응답 필드**:
+  - paymentId, transactionId
+  - status (cancelled)
+  - refundedAmount, refundedCoin
+  - reason, cancelledAt
+- **특징**:
+  - 결제 취소 및 환불 처리
+  - 유효성 검사 포함 (취소 사유 필수)
+  - 취소 후 자동으로 결제 상세 정보 새로고침
+  - 에러 발생 시 throw (PAYMENT_NOT_FOUND: 결제 내역 없음)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`

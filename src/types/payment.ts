@@ -60,3 +60,19 @@ export interface CreatePaymentResponse {
   paymentUrl: string; // 결제 URL
   createdAt: string; // 결제 생성 시각 (ISO 8601)
 }
+
+// 결제 취소 요청
+export interface CancelPaymentRequest {
+  reason: string; // 취소 사유 (필수)
+}
+
+// 결제 취소 응답
+export interface CancelPaymentResponse {
+  paymentId: number; // 결제 고유 ID
+  transactionId: string; // 거래 ID
+  status: PaymentStatus; // 결제 상태 (cancelled)
+  refundedAmount: number; // 환불된 금액 (KRW)
+  refundedCoin: number; // 환불된 코인
+  reason: string; // 취소 사유
+  cancelledAt: string; // 취소 시각 (ISO 8601)
+}
