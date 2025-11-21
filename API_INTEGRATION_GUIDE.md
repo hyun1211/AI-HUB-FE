@@ -328,6 +328,20 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 유효성 검사 포함
   - 모든 필드 선택적 (부분 수정 가능)
 
+### 3-4. [관리자] AI 모델 삭제
+
+- **엔드포인트**: `DELETE /api/v1/admin/models/{modelId}`
+- **API**: `src/lib/api/model.ts` - `deleteModel()`
+- **훅**: `src/hooks/useModels.ts` - `useModels().deleteModelById()`
+- **인증**: 관리자 권한 (쿠키 기반)
+- **경로 변수**:
+  - `modelId` (integer)
+- **응답**: 204 No Content
+- **특징**:
+  - 관리자 권한 필수
+  - 삭제 후 자동으로 목록 새로고침
+  - 활성 채팅방에서 사용 중인 모델은 삭제 불가 (409 Conflict)
+
 ### 4. 파일 업로드
 
 - **엔드포인트**: `POST /api/v1/messages/files/upload`
@@ -411,6 +425,7 @@ SSE 파싱 로직은 `src/lib/api/message.ts`의 `sendMessageWithStreaming()`에
 - `MESSAGE_NOT_FOUND`: 메시지 없음
 - `MODEL_NOT_FOUND`: AI 모델 없음
 - `MODEL_NOT_ACTIVE`: AI 모델 비활성 상태
+- `CONFLICT`: 충돌 (예: 사용 중인 모델 삭제 시도)
 - `INSUFFICIENT_BALANCE`: 코인 부족 (402 Payment Required)
 - `SYSTEM_ILLEGAL_STATE`: 시스템 오류
 

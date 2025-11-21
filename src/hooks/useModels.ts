@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { getModels, createModel } from "@/lib/api/model";
+import { getModels, createModel, deleteModel } from "@/lib/api/model";
 import { AIModel, CreateModelRequest } from "@/types/model";
 
 interface UseModelsOptions {
@@ -68,6 +68,28 @@ export function useModels(options: UseModelsOptions = {}) {
     [fetchModels, onError]
   );
 
+  // [관리자] AI 모델 삭제
+  const deleteModelById = useCallback(
+    async (modelId: number) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await deleteModel(modelId);
+        // 삭제 후 목록 새로고침
+        await fetchModels();
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("삭제 실패");
+        setError(error);
+        onError?.(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchModels, onError]
+  );
+
   // 활성화된 모델만 필터링
   const activeModels = models.filter((model) => model.isActive);
 
@@ -87,5 +109,6 @@ export function useModels(options: UseModelsOptions = {}) {
     refresh,
     getModelById,
     createNewModel,
+    deleteModelById,
   };
 }
