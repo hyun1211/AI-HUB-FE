@@ -473,6 +473,26 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 동적 페이지/상태 조회 가능 (fetchPayments(page, status))
   - autoFetch 옵션 지원
 
+### 5-7. 결제 상세 조회
+
+- **엔드포인트**: `GET /api/payments/{paymentId}`
+- **타입**: `src/types/payment.ts` - `PaymentDetail`
+- **API**: `src/lib/api/payment.ts` - `getPaymentDetail()`
+- **훅**: `src/hooks/usePaymentDetail.ts` - `usePaymentDetail()`
+- **인증**: 필수 (쿠키 기반)
+- **경로 변수**:
+  - `paymentId` (number)
+- **응답 필드**:
+  - paymentId, transactionId, paymentMethod
+  - amountKrw, amountUsd, coinAmount, bonusCoin
+  - status, paymentGateway, metadata
+  - createdAt, completedAt
+- **특징**:
+  - 결제 상세 정보 제공 (목록 조회보다 상세)
+  - metadata(JSONB) 포함
+  - autoFetch 옵션 지원
+  - 에러 콜백 지원
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
@@ -544,6 +564,7 @@ SSE 파싱 로직은 `src/lib/api/message.ts`의 `sendMessageWithStreaming()`에
 - `ROOM_NOT_FOUND`: 채팅방 없음
 - `MESSAGE_NOT_FOUND`: 메시지 없음
 - `MODEL_NOT_FOUND`: AI 모델 없음
+- `PAYMENT_NOT_FOUND`: 결제 내역 없음
 - `MODEL_NOT_ACTIVE`: AI 모델 비활성 상태
 - `CONFLICT`: 충돌 (예: 사용 중인 모델 삭제 시도)
 - `INSUFFICIENT_BALANCE`: 코인 부족 (402 Payment Required)
