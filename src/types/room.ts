@@ -68,3 +68,8 @@ export interface RoomDetail {
   createdAt: string; // 생성 시각 (ISO 8601)
   updatedAt: string; // 수정 시각 (ISO 8601)
 }
+
+// 채팅방 제목 수정 요청
+export interface UpdateChatRoomRequest {
+  title: string; // 새로운 채팅방 제목 (필수, 최대 30자)
+}

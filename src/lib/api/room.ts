@@ -4,6 +4,7 @@ import {
   CreateChatRoomRequest,
   CreateChatRoomResponse,
   RoomDetail,
+  UpdateChatRoomRequest,
 } from "@/types/room";
 import { ApiErrorDetail, ApiResponse } from "@/types/upload";
 
@@ -281,5 +282,77 @@ export async function deleteChatRoom(roomId: string): Promise<void> {
       throw error;
     }
     throw new Error("채팅방 삭제 중 오류가 발생했습니다.");
+  }
+}
+
+/**
+ * 채팅방 제목 수정
+ * 쿠키 기반 인증 사용
+ */
+export async function updateChatRoom(
+  roomId: string,
+  request: UpdateChatRoomRequest
+): Promise<ApiResponse<RoomDetail>> {
+  const { title } = request;
+
+  // 유효성 검사
+  if (!roomId || roomId.trim().length === 0) {
+    throw new Error("채팅방 ID가 필요합니다.");
+  }
+
+  if (!title || title.trim().length === 0) {
+    throw new Error("채팅방 제목을 입력해주세요.");
+  }
+
+  if (title.length > 30) {
+    throw new Error("채팅방 제목은 최대 30자까지 입력 가능합니다.");
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/chat-rooms/${roomId}`,
+      {
+        method: "PUT",
+        credentials: "include", // 쿠키 포함
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title }),
+      }
+    );
+
+    const data: ApiResponse<RoomDetail> | ApiResponse<ApiErrorDetail> =
+      await response.json();
+
+    // 성공 응답 (200 OK)
+    if (response.ok && data.success) {
+      return data as ApiResponse<RoomDetail>;
+    }
+
+    // 에러 응답
+    const errorDetail = data.detail as ApiErrorDetail;
+
+    // 특정 에러 코드별 처리
+    switch (errorDetail.code) {
+      case "INVALID_TOKEN":
+        throw new Error("인증이 필요합니다. 다시 로그인해주세요.");
+      case "FORBIDDEN":
+        throw new Error("이 채팅방을 수정할 권한이 없습니다.");
+      case "ROOM_NOT_FOUND":
+        throw new Error("채팅방을 찾을 수 없습니다.");
+      case "VALIDATION_ERROR":
+        throw new Error(
+          errorDetail.message || "입력값을 확인해주세요."
+        );
+      default:
+        throw new Error(
+          errorDetail.message || "채팅방 수정에 실패했습니다."
+        );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("채팅방 수정 중 오류가 발생했습니다.");
   }
 }

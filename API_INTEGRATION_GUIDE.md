@@ -228,6 +228,23 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 연관 메시지도 함께 삭제
   - 삭제 후 자동으로 목록 새로고침
 
+### 2-3. 채팅방 제목 수정
+
+- **엔드포인트**: `PUT /api/v1/chat-rooms/{roomId}`
+- **타입**: `src/types/room.ts` - `UpdateChatRoomRequest`, `RoomDetail`
+- **API**: `src/lib/api/room.ts` - `updateChatRoom()`
+- **훅**: `src/hooks/useRoomDetail.ts` - `useRoomDetail().updateTitle()`
+- **경로 변수**:
+  - `roomId` (UUID)
+- **요청 필드**:
+  - `title` (필수, 최대 30자)
+- **응답 필드**:
+  - roomId, title, userId
+  - coinUsage, createdAt, updatedAt
+- **특징**:
+  - 수정 후 자동으로 상태 업데이트
+  - 유효성 검사 포함
+
 ### 3. 파일 업로드
 
 - **엔드포인트**: `POST /api/v1/messages/files/upload`

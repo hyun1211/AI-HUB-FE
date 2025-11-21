@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { getRoomDetail } from "@/lib/api/room";
-import { RoomDetail } from "@/types/room";
+import { getRoomDetail, updateChatRoom } from "@/lib/api/room";
+import { RoomDetail, UpdateChatRoomRequest } from "@/types/room";
 
 interface UseRoomDetailOptions {
   roomId: string;
@@ -43,6 +43,34 @@ export function useRoomDetail(options: UseRoomDetailOptions) {
     await fetchRoomDetail();
   }, [fetchRoomDetail]);
 
+  // 채팅방 제목 수정
+  const updateTitle = useCallback(
+    async (request: UpdateChatRoomRequest) => {
+      if (!roomId) {
+        const error = new Error("채팅방 ID가 필요합니다.");
+        setError(error);
+        throw error;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await updateChatRoom(roomId, request);
+        setRoomDetail(response.detail);
+        return response.detail;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("수정 실패");
+        setError(error);
+        onError?.(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [roomId, onError]
+  );
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch && roomId) {
@@ -56,5 +84,6 @@ export function useRoomDetail(options: UseRoomDetailOptions) {
     error,
     fetchRoomDetail,
     refresh,
+    updateTitle,
   };
 }
