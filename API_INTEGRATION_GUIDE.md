@@ -435,6 +435,24 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 탈퇴 후 사용자 정보 자동 초기화
   - 에러 발생 시 throw
 
+### 5-5. 내 정보 수정
+
+- **엔드포인트**: `PUT /api/users/me`
+- **타입**: `src/types/user.ts` - `UpdateUserRequest`, `UserInfo`
+- **API**: `src/lib/api/user.ts` - `updateCurrentUser()`
+- **훅**: `src/hooks/useCurrentUser.ts` - `useCurrentUser().updateUser()`
+- **인증**: 필수 (쿠키 기반)
+- **요청 필드**:
+  - `username` (필수, 2~30자, 공백 불가)
+  - `email` (필수, RFC 5322 형식)
+- **응답 필드**:
+  - userId, username, email
+  - isActivated, createdAt
+- **특징**:
+  - 수정 후 자동으로 사용자 정보 업데이트
+  - 유효성 검사 포함 (길이, 공백, 이메일 형식)
+  - 에러 발생 시 throw
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`

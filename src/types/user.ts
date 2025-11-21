@@ -8,3 +8,9 @@ export interface UserInfo {
   isActivated: boolean; // 계정 활성화 여부
   createdAt: string; // 계정 생성 시각 (ISO 8601)
 }
+
+// 내 정보 수정 요청
+export interface UpdateUserRequest {
+  username: string; // 사용자 이름 (필수, 2~30자, 공백 불가)
+  email: string; // 사용자 이메일 (필수, RFC 5322 형식)
+}

@@ -1,6 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
-import { getCurrentUser, deleteCurrentUser } from "@/lib/api/user";
-import { UserInfo } from "@/types/user";
+import {
+  getCurrentUser,
+  deleteCurrentUser,
+  updateCurrentUser,
+} from "@/lib/api/user";
+import { UserInfo, UpdateUserRequest } from "@/types/user";
 
 interface UseCurrentUserOptions {
   autoFetch?: boolean; // 자동으로 로드 (기본값: true)
@@ -56,6 +60,29 @@ export function useCurrentUser(options: UseCurrentUserOptions = {}) {
     }
   }, [onError]);
 
+  // 정보 수정
+  const updateUser = useCallback(
+    async (request: UpdateUserRequest) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await updateCurrentUser(request);
+        // 수정 후 사용자 정보 업데이트
+        setUser(response.detail);
+        return response.detail;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("수정 실패");
+        setError(error);
+        onError?.(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [onError]
+  );
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch) {
@@ -70,5 +97,6 @@ export function useCurrentUser(options: UseCurrentUserOptions = {}) {
     fetchUser,
     refresh,
     deleteUser,
+    updateUser,
   };
 }
