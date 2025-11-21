@@ -410,7 +410,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-3. 내 정보 조회
 
-- **엔드포인트**: `GET /api/users/me`
+- **엔드포인트**: `GET /api/v1/users/me`
 - **타입**: `src/types/user.ts` - `UserInfo`
 - **API**: `src/lib/api/user.ts` - `getCurrentUser()`
 - **훅**: `src/hooks/useCurrentUser.ts` - `useCurrentUser()`
@@ -425,7 +425,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-4. 회원 탈퇴
 
-- **엔드포인트**: `DELETE /api/users/me`
+- **엔드포인트**: `DELETE /api/v1/users/me`
 - **API**: `src/lib/api/user.ts` - `deleteCurrentUser()`
 - **훅**: `src/hooks/useCurrentUser.ts` - `useCurrentUser().deleteUser()`
 - **인증**: 필수 (쿠키 기반)
@@ -437,7 +437,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-5. 내 정보 수정
 
-- **엔드포인트**: `PUT /api/users/me`
+- **엔드포인트**: `PUT /api/v1/users/me`
 - **타입**: `src/types/user.ts` - `UpdateUserRequest`, `UserInfo`
 - **API**: `src/lib/api/user.ts` - `updateCurrentUser()`
 - **훅**: `src/hooks/useCurrentUser.ts` - `useCurrentUser().updateUser()`
@@ -455,7 +455,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-6. 결제 내역 조회
 
-- **엔드포인트**: `GET /api/payments`
+- **엔드포인트**: `GET /api/v1/payments`
 - **타입**: `src/types/payment.ts` - `Payment`, `PaymentsPageResponse`, `PaymentStatus`
 - **API**: `src/lib/api/payment.ts` - `getPayments()`
 - **훅**: `src/hooks/usePayments.ts` - `usePayments()`
@@ -475,7 +475,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-7. 결제 상세 조회
 
-- **엔드포인트**: `GET /api/payments/{paymentId}`
+- **엔드포인트**: `GET /api/v1/payments/{paymentId}`
 - **타입**: `src/types/payment.ts` - `PaymentDetail`
 - **API**: `src/lib/api/payment.ts` - `getPaymentDetail()`
 - **훅**: `src/hooks/usePaymentDetail.ts` - `usePaymentDetail()`
@@ -495,7 +495,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-8. 코인 충전 요청
 
-- **엔드포인트**: `POST /api/payments`
+- **엔드포인트**: `POST /api/v1/payments`
 - **타입**: `src/types/payment.ts` - `CreatePaymentRequest`, `CreatePaymentResponse`
 - **API**: `src/lib/api/payment.ts` - `createPayment()`
 - **훅**: `src/hooks/usePayments.ts` - `usePayments().createNewPayment()`
@@ -518,7 +518,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-9. 결제 취소
 
-- **엔드포인트**: `POST /api/payments/{paymentId}/cancel`
+- **엔드포인트**: `POST /api/v1/payments/{paymentId}/cancel`
 - **타입**: `src/types/payment.ts` - `CancelPaymentRequest`, `CancelPaymentResponse`
 - **API**: `src/lib/api/payment.ts` - `cancelPayment()`
 - **훅**: `src/hooks/usePaymentDetail.ts` - `usePaymentDetail().cancelPaymentRequest()`
@@ -540,7 +540,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-10. 로그아웃
 
-- **엔드포인트**: `POST /api/auth/logout`
+- **엔드포인트**: `POST /api/v1/auth/logout`
 - **타입**: `src/types/auth.ts` - `LogoutRequest`
 - **API**: `src/lib/api/auth.ts` - `logout()`
 - **훅**: `src/hooks/useLogout.ts` - `useLogout()`
@@ -556,7 +556,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-11. 토큰 갱신
 
-- **엔드포인트**: `POST /api/token/refresh`
+- **엔드포인트**: `POST /api/v1/token/refresh`
 - **타입**: `src/types/auth.ts` - `TokenRefreshResponse`
 - **API**: `src/lib/api/auth.ts` - `refreshToken()`
 - **훅**: `src/hooks/useTokenRefresh.ts` - `useTokenRefresh()`
@@ -578,7 +578,7 @@ export function useYourFeature(options: UseYourFeatureOptions) {
 
 ### 5-12. 지갑 조회
 
-- **엔드포인트**: `GET /api/wallet`
+- **엔드포인트**: `GET /api/v1/wallet`
 - **타입**: `src/types/wallet.ts` - `WalletInfo`
 - **API**: `src/lib/api/wallet.ts` - `getWallet()`
 - **훅**: `src/hooks/useWallet.ts` - `useWallet()`

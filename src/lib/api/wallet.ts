@@ -14,7 +14,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
  */
 export async function getWallet(): Promise<ApiResponse<WalletInfo>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/wallet`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/wallet`, {
       method: "GET",
       credentials: "include", // 쿠키 포함
       headers: {

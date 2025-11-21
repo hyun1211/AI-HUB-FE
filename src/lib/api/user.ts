@@ -10,7 +10,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
  */
 export async function getCurrentUser(): Promise<ApiResponse<UserInfo>> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
       method: "GET",
       credentials: "include", // 쿠키 포함
       headers: {
@@ -56,7 +56,7 @@ export async function getCurrentUser(): Promise<ApiResponse<UserInfo>> {
  */
 export async function deleteCurrentUser(): Promise<void> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
       method: "DELETE",
       credentials: "include", // 쿠키 포함
       headers: {
@@ -125,7 +125,7 @@ export async function updateCurrentUser(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/users/me`, {
       method: "PUT",
       credentials: "include", // 쿠키 포함
       headers: {

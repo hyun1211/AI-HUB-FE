@@ -44,7 +44,7 @@ export async function getPayments(
     queryParams.append("status", status);
   }
 
-  const url = `${API_BASE_URL}/api/payments?${queryParams.toString()}`;
+  const url = `${API_BASE_URL}/api/v1/payments?${queryParams.toString()}`;
 
   try {
     const response = await fetch(url, {
@@ -101,7 +101,7 @@ export async function getPaymentDetail(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/payments/${paymentId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/payments/${paymentId}`, {
       method: "GET",
       credentials: "include", // 쿠키 포함
       headers: {
@@ -163,7 +163,7 @@ export async function createPayment(
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/payments`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/payments`, {
       method: "POST",
       credentials: "include", // 쿠키 포함
       headers: {
@@ -227,7 +227,7 @@ export async function cancelPayment(
 
   try {
     const response = await fetch(
-      `${API_BASE_URL}/api/payments/${paymentId}/cancel`,
+      `${API_BASE_URL}/api/v1/payments/${paymentId}/cancel`,
       {
         method: "POST",
         credentials: "include", // 쿠키 포함

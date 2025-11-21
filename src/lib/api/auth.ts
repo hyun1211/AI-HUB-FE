@@ -21,7 +21,7 @@ export async function logout(request: LogoutRequest): Promise<void> {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include", // 쿠키 포함
       headers: {
@@ -67,7 +67,7 @@ export async function logout(request: LogoutRequest): Promise<void> {
  */
 export async function refreshToken(): Promise<TokenRefreshResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/token/refresh`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/token/refresh`, {
       method: "POST",
       credentials: "include", // 쿠키 포함 (refreshToken 쿠키)
       headers: {
