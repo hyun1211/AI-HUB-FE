@@ -3,6 +3,7 @@ import {
   GetChatRoomsParams,
   CreateChatRoomRequest,
   CreateChatRoomResponse,
+  RoomDetail,
 } from "@/types/room";
 import { ApiErrorDetail, ApiResponse } from "@/types/upload";
 
@@ -172,5 +173,113 @@ export async function createChatRoom(
       throw error;
     }
     throw new Error("채팅방 생성 중 오류가 발생했습니다.");
+  }
+}
+
+/**
+ * 특정 채팅방의 상세 정보 조회
+ * 쿠키 기반 인증 사용
+ */
+export async function getRoomDetail(
+  roomId: string
+): Promise<ApiResponse<RoomDetail>> {
+  // 유효성 검사
+  if (!roomId || roomId.trim().length === 0) {
+    throw new Error("채팅방 ID가 필요합니다.");
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/chat-rooms/${roomId}`,
+      {
+        method: "GET",
+        credentials: "include", // 쿠키 포함
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const data: ApiResponse<RoomDetail> | ApiResponse<ApiErrorDetail> =
+      await response.json();
+
+    // 성공 응답 (200 OK)
+    if (response.ok && data.success) {
+      return data as ApiResponse<RoomDetail>;
+    }
+
+    // 에러 응답
+    const errorDetail = data.detail as ApiErrorDetail;
+
+    // 특정 에러 코드별 처리
+    switch (errorDetail.code) {
+      case "INVALID_TOKEN":
+        throw new Error("인증이 필요합니다. 다시 로그인해주세요.");
+      case "FORBIDDEN":
+        throw new Error("이 채팅방에 접근할 권한이 없습니다.");
+      case "ROOM_NOT_FOUND":
+        throw new Error("채팅방을 찾을 수 없습니다.");
+      default:
+        throw new Error(
+          errorDetail.message || "채팅방 조회에 실패했습니다."
+        );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("채팅방 조회 중 오류가 발생했습니다.");
+  }
+}
+
+/**
+ * 채팅방 삭제 (연관 메시지도 함께 삭제)
+ * 쿠키 기반 인증 사용
+ */
+export async function deleteChatRoom(roomId: string): Promise<void> {
+  // 유효성 검사
+  if (!roomId || roomId.trim().length === 0) {
+    throw new Error("채팅방 ID가 필요합니다.");
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/v1/chat-rooms/${roomId}`,
+      {
+        method: "DELETE",
+        credentials: "include", // 쿠키 포함
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 성공 응답 (204 No Content)
+    if (response.status === 204) {
+      return;
+    }
+
+    // 에러 응답 (JSON 본문이 있는 경우)
+    const data: ApiResponse<ApiErrorDetail> = await response.json();
+    const errorDetail = data.detail as ApiErrorDetail;
+
+    // 특정 에러 코드별 처리
+    switch (errorDetail.code) {
+      case "INVALID_TOKEN":
+        throw new Error("인증이 필요합니다. 다시 로그인해주세요.");
+      case "FORBIDDEN":
+        throw new Error("이 채팅방을 삭제할 권한이 없습니다.");
+      case "ROOM_NOT_FOUND":
+        throw new Error("채팅방을 찾을 수 없습니다.");
+      default:
+        throw new Error(
+          errorDetail.message || "채팅방 삭제에 실패했습니다."
+        );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("채팅방 삭제 중 오류가 발생했습니다.");
   }
 }

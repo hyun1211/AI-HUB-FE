@@ -3,6 +3,7 @@ import {
   getChatRooms,
   getNextChatRoomsPage,
   createChatRoom,
+  deleteChatRoom,
 } from "@/lib/api/room";
 import {
   ChatRoom,
@@ -136,6 +137,27 @@ export function useRooms(options: UseRoomsOptions = {}) {
     [fetchRooms]
   );
 
+  // 채팅방 삭제
+  const deleteRoom = useCallback(
+    async (roomId: string) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await deleteChatRoom(roomId);
+        // 삭제 후 현재 페이지 새로고침
+        await refresh();
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("삭제 실패");
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [refresh]
+  );
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch) {
@@ -154,6 +176,7 @@ export function useRooms(options: UseRoomsOptions = {}) {
     goToPage,
     refresh,
     createRoom,
+    deleteRoom,
     hasNextPage: pageInfo
       ? pageInfo.currentPage + 1 < pageInfo.totalPages
       : false,
@@ -255,6 +278,27 @@ export function useInfiniteRooms(options: UseRoomsOptions = {}) {
     [fetchInitialRooms]
   );
 
+  // 채팅방 삭제
+  const deleteRoom = useCallback(
+    async (roomId: string) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        await deleteChatRoom(roomId);
+        // 삭제 후 목록을 처음부터 다시 로드
+        await fetchInitialRooms();
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("삭제 실패");
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchInitialRooms]
+  );
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch) {
@@ -271,5 +315,6 @@ export function useInfiniteRooms(options: UseRoomsOptions = {}) {
     fetchInitialRooms,
     fetchMoreRooms,
     createRoom,
+    deleteRoom,
   };
 }

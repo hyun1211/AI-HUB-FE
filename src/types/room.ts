@@ -58,3 +58,13 @@ export interface CreateChatRoomResponse {
   createdAt: string; // 생성 시각 (ISO 8601)
   updatedAt: string; // 수정 시각 (ISO 8601)
 }
+
+// 채팅방 상세 조회 응답
+export interface RoomDetail {
+  roomId: string; // 채팅방 UUID
+  title: string; // 채팅방 제목
+  userId: number; // 채팅방 소유 사용자 ID
+  coinUsage: number; // 누적 코인 사용량
+  createdAt: string; // 생성 시각 (ISO 8601)
+  updatedAt: string; // 수정 시각 (ISO 8601)
+}

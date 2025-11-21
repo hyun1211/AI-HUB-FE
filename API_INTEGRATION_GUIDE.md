@@ -199,6 +199,35 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 생성 후 자동으로 목록 새로고침
   - 유효성 검사 포함
 
+### 2-1. 채팅방 상세 조회
+
+- **엔드포인트**: `GET /api/v1/chat-rooms/{roomId}`
+- **타입**: `src/types/room.ts` - `RoomDetail`
+- **API**: `src/lib/api/room.ts` - `getRoomDetail()`
+- **훅**: `src/hooks/useRoomDetail.ts` - `useRoomDetail()`
+- **경로 변수**:
+  - `roomId` (UUID)
+- **응답 필드**:
+  - roomId, title, userId
+  - coinUsage, createdAt, updatedAt
+- **특징**:
+  - autoFetch 옵션 지원
+  - 에러 콜백 지원
+
+### 2-2. 채팅방 삭제
+
+- **엔드포인트**: `DELETE /api/v1/chat-rooms/{roomId}`
+- **API**: `src/lib/api/room.ts` - `deleteChatRoom()`
+- **훅**: `src/hooks/useRooms.ts`
+  - `useRooms().deleteRoom()`: 일반 페이지네이션용
+  - `useInfiniteRooms().deleteRoom()`: 무한 스크롤용
+- **경로 변수**:
+  - `roomId` (UUID)
+- **응답**: 204 No Content
+- **특징**:
+  - 연관 메시지도 함께 삭제
+  - 삭제 후 자동으로 목록 새로고침
+
 ### 3. 파일 업로드
 
 - **엔드포인트**: `POST /api/v1/messages/files/upload`
