@@ -1,4 +1,4 @@
-import { AIModel, AIModelDetail } from "@/types/model";
+import { AIModel, AIModelDetail, CreateModelRequest } from "@/types/model";
 import { ApiErrorDetail, ApiResponse } from "@/types/upload";
 
 // API 베이스 URL
@@ -98,5 +98,97 @@ export async function getModelDetail(
       throw error;
     }
     throw new Error("모델 조회 중 오류가 발생했습니다.");
+  }
+}
+
+/**
+ * [관리자] 새로운 AI 모델 등록
+ * 쿠키 기반 인증 사용 (관리자 권한 필요)
+ */
+export async function createModel(
+  request: CreateModelRequest
+): Promise<ApiResponse<AIModelDetail>> {
+  const {
+    modelName,
+    displayName,
+    displayExplain,
+    inputPricePer1k,
+    outputPricePer1k,
+    isActive,
+  } = request;
+
+  // 유효성 검사
+  if (!modelName || modelName.trim().length === 0) {
+    throw new Error("모델 식별자를 입력해주세요.");
+  }
+
+  if (!displayName || displayName.trim().length === 0) {
+    throw new Error("모델 표시 이름을 입력해주세요.");
+  }
+
+  if (displayName.length > 30) {
+    throw new Error("모델 표시 이름은 최대 30자까지 입력 가능합니다.");
+  }
+
+  if (displayExplain && displayExplain.length > 200) {
+    throw new Error("모델 설명은 최대 200자까지 입력 가능합니다.");
+  }
+
+  if (inputPricePer1k < 0) {
+    throw new Error("입력 토큰 가격은 0 이상이어야 합니다.");
+  }
+
+  if (outputPricePer1k < 0) {
+    throw new Error("출력 토큰 가격은 0 이상이어야 합니다.");
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/v1/admin/models`, {
+      method: "POST",
+      credentials: "include", // 쿠키 포함
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        modelName,
+        displayName,
+        displayExplain,
+        inputPricePer1k,
+        outputPricePer1k,
+        isActive,
+      }),
+    });
+
+    const data: ApiResponse<AIModelDetail> | ApiResponse<ApiErrorDetail> =
+      await response.json();
+
+    // 성공 응답 (201 Created)
+    if (response.ok && data.success) {
+      return data as ApiResponse<AIModelDetail>;
+    }
+
+    // 에러 응답
+    const errorDetail = data.detail as ApiErrorDetail;
+
+    // 특정 에러 코드별 처리
+    switch (errorDetail.code) {
+      case "INVALID_TOKEN":
+        throw new Error("인증이 필요합니다. 다시 로그인해주세요.");
+      case "FORBIDDEN":
+        throw new Error("관리자 권한이 필요합니다.");
+      case "VALIDATION_ERROR":
+        throw new Error(
+          errorDetail.message || "입력값을 확인해주세요."
+        );
+      default:
+        throw new Error(
+          errorDetail.message || "모델 등록에 실패했습니다."
+        );
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error("모델 등록 중 오류가 발생했습니다.");
   }
 }

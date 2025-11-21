@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
-import { getModels } from "@/lib/api/model";
-import { AIModel } from "@/types/model";
+import { getModels, createModel } from "@/lib/api/model";
+import { AIModel, CreateModelRequest } from "@/types/model";
 
 interface UseModelsOptions {
   autoFetch?: boolean; // 자동으로 로드 (기본값: true)
@@ -45,6 +45,29 @@ export function useModels(options: UseModelsOptions = {}) {
     [models]
   );
 
+  // [관리자] AI 모델 등록
+  const createNewModel = useCallback(
+    async (request: CreateModelRequest) => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await createModel(request);
+        // 등록 후 목록 새로고침
+        await fetchModels();
+        return response.detail;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("등록 실패");
+        setError(error);
+        onError?.(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [fetchModels, onError]
+  );
+
   // 활성화된 모델만 필터링
   const activeModels = models.filter((model) => model.isActive);
 
@@ -63,5 +86,6 @@ export function useModels(options: UseModelsOptions = {}) {
     fetchModels,
     refresh,
     getModelById,
+    createNewModel,
   };
 }
