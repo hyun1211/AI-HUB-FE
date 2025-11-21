@@ -610,6 +610,29 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 새로고침 함수 (refresh) 제공
   - 에러 발생 시 throw (INVALID_TOKEN, WALLET_NOT_FOUND)
 
+### 5-14. 거래 상세 조회
+
+- **엔드포인트**: `GET /api/v1/transactions/{transactionId}`
+- **타입**: `src/types/transaction.ts` - `TransactionDetail`, `TransactionType`
+- **API**: `src/lib/api/transaction.ts` - `getTransactionDetail()`
+- **훅**: `src/hooks/useTransactionDetail.ts` - `useTransactionDetail()`
+- **인증**: 필수 (쿠키 기반)
+- **경로 변수**:
+  - `transactionId` (number)
+- **응답 필드**:
+  - transactionId, userId
+  - roomId (nullable), messageId (nullable)
+  - transactionType (purchase, usage, refund, bonus)
+  - amount, balanceAfter
+  - description, modelId (nullable)
+  - createdAt
+- **특징**:
+  - 특정 거래의 상세 정보 조회
+  - autoFetch 옵션 지원
+  - 에러 콜백 지원
+  - 새로고침 함수 (refresh) 제공
+  - 에러 발생 시 throw (AUTHENTICATION_FAILED, TRANSACTION_NOT_FOUND)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
