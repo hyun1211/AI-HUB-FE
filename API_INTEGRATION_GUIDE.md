@@ -576,6 +576,24 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - onSuccess, onError 콜백 지원
   - 에러 발생 시 throw (AUTHENTICATION_FAILED, TOKEN_REUSED)
 
+### 5-12. 지갑 조회
+
+- **엔드포인트**: `GET /api/wallet`
+- **타입**: `src/types/wallet.ts` - `WalletInfo`
+- **API**: `src/lib/api/wallet.ts` - `getWallet()`
+- **훅**: `src/hooks/useWallet.ts` - `useWallet()`
+- **인증**: 필수 (쿠키 기반)
+- **응답 필드**:
+  - walletId, userId
+  - balance, totalPurchased, totalUsed
+  - lastTransactionAt, createdAt, updatedAt
+- **특징**:
+  - 현재 사용자의 지갑 정보 조회
+  - autoFetch 옵션 지원
+  - 에러 콜백 지원
+  - 새로고침 함수 (refresh) 제공
+  - 에러 발생 시 throw (INVALID_TOKEN, WALLET_NOT_FOUND)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
