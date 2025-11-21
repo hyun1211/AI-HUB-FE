@@ -15,3 +15,8 @@ export interface WalletInfo {
   createdAt: string;
   updatedAt: string;
 }
+
+// 지갑 잔액 타입
+export interface WalletBalance {
+  balance: number;
+}

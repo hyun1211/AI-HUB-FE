@@ -594,6 +594,22 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 새로고침 함수 (refresh) 제공
   - 에러 발생 시 throw (INVALID_TOKEN, WALLET_NOT_FOUND)
 
+### 5-13. 잔액 조회
+
+- **엔드포인트**: `GET /api/v1/wallet/balance`
+- **타입**: `src/types/wallet.ts` - `WalletBalance`
+- **API**: `src/lib/api/wallet.ts` - `getWalletBalance()`
+- **훅**: `src/hooks/useWalletBalance.ts` - `useWalletBalance()`
+- **인증**: 필수 (쿠키 기반)
+- **응답 필드**:
+  - balance (현재 코인 잔액)
+- **특징**:
+  - 지갑 잔액만 조회 (경량화된 API)
+  - autoFetch 옵션 지원
+  - 에러 콜백 지원
+  - 새로고침 함수 (refresh) 제공
+  - 에러 발생 시 throw (INVALID_TOKEN, WALLET_NOT_FOUND)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
