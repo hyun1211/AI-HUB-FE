@@ -633,6 +633,31 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - 새로고침 함수 (refresh) 제공
   - 에러 발생 시 throw (AUTHENTICATION_FAILED, TRANSACTION_NOT_FOUND)
 
+### 5-15. 거래 내역 조회
+
+- **엔드포인트**: `GET /api/v1/transactions`
+- **타입**: `src/types/transaction.ts` - `Transaction`, `TransactionsPageResponse`, `GetTransactionsParams`
+- **API**: `src/lib/api/transaction.ts` - `getTransactions()`
+- **훅**: `src/hooks/useTransactions.ts` - `useTransactions()`
+- **인증**: 필수 (쿠키 기반)
+- **쿼리 파라미터**:
+  - `page` (기본값: 0)
+  - `size` (기본값: 20, 1~100)
+  - `transactionType` (선택: purchase, usage, refund, bonus)
+  - `startDate` (선택, YYYY-MM-DD 형식)
+  - `endDate` (선택, YYYY-MM-DD 형식)
+- **응답 필드**:
+  - content[] (transactionId, transactionType, amount, balanceAfter, description, modelId, modelName, roomId, messageId, createdAt)
+  - totalElements, totalPages, size, number
+- **특징**:
+  - 페이지네이션 지원
+  - 거래 유형별 필터링 가능
+  - 날짜 범위 필터링 가능
+  - 동적 페이지/필터 조회 가능 (fetchTransactions(params))
+  - autoFetch 옵션 지원
+  - 새로고침 함수 (refresh) 제공
+  - 에러 발생 시 throw (VALIDATION_ERROR, AUTHENTICATION_FAILED)
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`

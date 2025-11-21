@@ -20,3 +20,35 @@ export interface TransactionDetail {
   modelId: number | null;
   createdAt: string;
 }
+
+// 거래 내역 목록 아이템
+export interface Transaction {
+  transactionId: number;
+  transactionType: TransactionType;
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  modelId: number | null;
+  modelName: string | null;
+  roomId: string | null;
+  messageId: string | null;
+  createdAt: string;
+}
+
+// 거래 내역 페이지 응답
+export interface TransactionsPageResponse {
+  content: Transaction[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
+
+// 거래 내역 조회 파라미터
+export interface GetTransactionsParams {
+  page?: number;
+  size?: number;
+  transactionType?: TransactionType;
+  startDate?: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+}
