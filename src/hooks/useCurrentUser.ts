@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { getCurrentUser } from "@/lib/api/user";
+import { getCurrentUser, deleteCurrentUser } from "@/lib/api/user";
 import { UserInfo } from "@/types/user";
 
 interface UseCurrentUserOptions {
@@ -37,6 +37,25 @@ export function useCurrentUser(options: UseCurrentUserOptions = {}) {
     await fetchUser();
   }, [fetchUser]);
 
+  // 회원 탈퇴
+  const deleteUser = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await deleteCurrentUser();
+      // 탈퇴 후 사용자 정보 초기화
+      setUser(null);
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error("탈퇴 실패");
+      setError(error);
+      onError?.(error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [onError]);
+
   // 초기 로드
   useEffect(() => {
     if (autoFetch) {
@@ -50,5 +69,6 @@ export function useCurrentUser(options: UseCurrentUserOptions = {}) {
     error,
     fetchUser,
     refresh,
+    deleteUser,
   };
 }

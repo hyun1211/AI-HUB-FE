@@ -423,6 +423,18 @@ export function useYourFeature(options: UseYourFeatureOptions) {
   - autoFetch 옵션 지원
   - 에러 콜백 지원
 
+### 5-4. 회원 탈퇴
+
+- **엔드포인트**: `DELETE /api/users/me`
+- **API**: `src/lib/api/user.ts` - `deleteCurrentUser()`
+- **훅**: `src/hooks/useCurrentUser.ts` - `useCurrentUser().deleteUser()`
+- **인증**: 필수 (쿠키 기반)
+- **응답**: 204 No Content
+- **특징**:
+  - 소프트 삭제 처리
+  - 탈퇴 후 사용자 정보 자동 초기화
+  - 에러 발생 시 throw
+
 ### 6. 메시지 목록 조회 (페이지네이션)
 
 - **엔드포인트**: `GET /api/v1/messages/page/{roomId}`
