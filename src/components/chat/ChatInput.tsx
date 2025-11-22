@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import svgPathsMain from "@/assets/svgs/main";
+import { ALLOWED_EXTENSIONS } from "@/types/upload";
 
 interface ChatInputProps {
   message: string;
@@ -11,6 +12,8 @@ interface ChatInputProps {
   pastedImage?: string | null;
   onPasteImage?: (imageData: string) => void;
   onRemoveImage?: () => void;
+  onFileSelect?: (file: File) => void;
+  isUploadingFile?: boolean;
 }
 
 export function ChatInput({
@@ -21,12 +24,42 @@ export function ChatInput({
   pastedImage,
   onPasteImage,
   onRemoveImage,
+  onFileSelect,
+  isUploadingFile,
 }: ChatInputProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       onSubmit(e);
     }
+  };
+
+  // 파일 선택 처리
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onFileSelect) {
+      // 이미지인 경우 미리보기도 표시
+      if (file.type.startsWith("image/") && onPasteImage) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const base64 = event.target?.result as string;
+          onPasteImage(base64);
+        };
+        reader.readAsDataURL(file);
+      }
+      onFileSelect(file);
+    }
+    // input 초기화 (같은 파일 다시 선택 가능하도록)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // 첨부 버튼 클릭
+  const handleAttachClick = () => {
+    fileInputRef.current?.click();
   };
 
   // 클립보드 붙여넣기 처리
@@ -90,11 +123,23 @@ export function ChatInput({
             disabled={isStreaming}
           />
 
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ALLOWED_EXTENSIONS.join(",")}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+
           {/* Attachment button */}
           <button
             type="button"
-            className="absolute left-[8px] bottom-[15px] size-[24px]"
+            onClick={handleAttachClick}
+            disabled={isStreaming || isUploadingFile}
+            className="absolute left-[8px] bottom-[15px] size-[24px] hover:opacity-70 transition-opacity disabled:opacity-30"
             data-name="paperclip-02"
+            title="파일 첨부"
           >
             <div className="absolute flex inset-[8.253%] items-center justify-center">
               <div className="flex-none h-[9.139px] rotate-[315deg] w-[19.2px]">
