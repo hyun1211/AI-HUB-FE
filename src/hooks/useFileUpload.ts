@@ -1,17 +1,19 @@
 import { useState, useCallback } from "react";
 import { uploadFile, validateFile } from "@/lib/api/upload";
-import { UploadFileResponse, ApiResponse } from "@/types/upload";
+import { MessageFileUploadResponse, ApiResponse } from "@/types/upload";
 
 interface UseFileUploadOptions {
-  onSuccess?: (response: ApiResponse<UploadFileResponse>) => void;
+  modelId: number;
+  onSuccess?: (response: ApiResponse<MessageFileUploadResponse>) => void;
   onError?: (error: Error) => void;
 }
 
-export function useFileUpload(options?: UseFileUploadOptions) {
+export function useFileUpload(options: UseFileUploadOptions) {
+  const { modelId } = options;
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploadedFile, setUploadedFile] =
-    useState<ApiResponse<UploadFileResponse> | null>(null);
+    useState<ApiResponse<MessageFileUploadResponse> | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const upload = useCallback(
@@ -42,24 +44,24 @@ export function useFileUpload(options?: UseFileUploadOptions) {
           });
         }, 100);
 
-        const response = await uploadFile(file);
+        const response = await uploadFile(file, modelId);
 
         clearInterval(progressInterval);
         setProgress(100);
         setUploadedFile(response);
-        options?.onSuccess?.(response);
+        options.onSuccess?.(response);
 
         return response;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("업로드 실패");
         setError(error);
-        options?.onError?.(error);
+        options.onError?.(error);
         return null;
       } finally {
         setIsUploading(false);
       }
     },
-    [options]
+    [modelId, options]
   );
 
   const reset = useCallback(() => {
@@ -79,13 +81,20 @@ export function useFileUpload(options?: UseFileUploadOptions) {
   };
 }
 
+interface UseMultiFileUploadOptions {
+  modelId: number;
+  onSuccess?: (response: ApiResponse<MessageFileUploadResponse>) => void;
+  onError?: (error: Error) => void;
+}
+
 /**
  * 여러 파일 업로드를 위한 훅
  */
-export function useMultiFileUpload(options?: UseFileUploadOptions) {
+export function useMultiFileUpload(options: UseMultiFileUploadOptions) {
+  const { modelId } = options;
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<
-    ApiResponse<UploadFileResponse>[]
+    ApiResponse<MessageFileUploadResponse>[]
   >([]);
   const [failedFiles, setFailedFiles] = useState<
     { file: File; error: Error }[]
@@ -101,7 +110,7 @@ export function useMultiFileUpload(options?: UseFileUploadOptions) {
       setCurrentFileIndex(0);
       setTotalFiles(files.length);
 
-      const uploaded: ApiResponse<UploadFileResponse>[] = [];
+      const uploaded: ApiResponse<MessageFileUploadResponse>[] = [];
       const failed: { file: File; error: Error }[] = [];
 
       for (let i = 0; i < files.length; i++) {
@@ -109,13 +118,13 @@ export function useMultiFileUpload(options?: UseFileUploadOptions) {
         setCurrentFileIndex(i + 1);
 
         try {
-          const response = await uploadFile(file);
+          const response = await uploadFile(file, modelId);
           uploaded.push(response);
-          options?.onSuccess?.(response);
+          options.onSuccess?.(response);
         } catch (err) {
           const error = err instanceof Error ? err : new Error("업로드 실패");
           failed.push({ file, error });
-          options?.onError?.(error);
+          options.onError?.(error);
         }
       }
 
@@ -125,7 +134,7 @@ export function useMultiFileUpload(options?: UseFileUploadOptions) {
 
       return { uploaded, failed };
     },
-    [options]
+    [modelId, options]
   );
 
   const reset = useCallback(() => {
