@@ -26,12 +26,11 @@ export function useChatWithAPI(options: UseChatOptions) {
     async (file: File) => {
       setIsUploadingFile(true);
       try {
-        const response = await uploadFile(file);
-        // 파일 URL에서 fileId 추출 또는 별도로 제공되는 경우 사용
-        // API 문서에 fileId가 어떻게 제공되는지 명시되지 않았으므로
-        // 일단 fileUrl을 사용 (실제로는 서버에서 fileId를 반환해야 함)
-        setUploadedFileId(response.detail.fileUrl);
-        return response.detail.fileUrl;
+        const response = await uploadFile(file, modelId);
+        // AI 서버에서 발급한 fileId 반환
+        const fileId = response.detail.fileId;
+        setUploadedFileId(fileId);
+        return fileId;
       } catch (err) {
         const error = err instanceof Error ? err : new Error("파일 업로드 실패");
         onError?.(error);
@@ -40,7 +39,7 @@ export function useChatWithAPI(options: UseChatOptions) {
         setIsUploadingFile(false);
       }
     },
-    [onError]
+    [modelId, onError]
   );
 
   // 이미지 데이터를 파일로 변환하여 업로드

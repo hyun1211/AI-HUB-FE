@@ -2,6 +2,7 @@ import {
   ApiResponse,
   ApiErrorDetail,
   UploadFileResponse,
+  MessageFileUploadResponse,
   ALLOWED_FILE_TYPES,
   MAX_FILE_SIZE,
 } from "@/types/upload";
@@ -36,21 +37,31 @@ export function validateFile(file: File): {
 }
 
 /**
- * 파일 업로드 API
+ * AI 서버 파일 업로드 API (메시지 전송용)
  * 쿠키 기반 인증 사용
+ * @param file - 업로드할 파일
+ * @param modelId - AI 모델 ID
+ * @returns fileId - 메시지 전송 시 사용할 파일 ID
  */
 export async function uploadFile(
-  file: File
-): Promise<ApiResponse<UploadFileResponse>> {
+  file: File,
+  modelId: number
+): Promise<ApiResponse<MessageFileUploadResponse>> {
   // 파일 유효성 검사
   const validation = validateFile(file);
   if (!validation.isValid) {
     throw new Error(validation.error);
   }
 
+  // modelId 유효성 검사
+  if (!modelId || modelId <= 0) {
+    throw new Error("유효한 AI 모델 ID가 필요합니다.");
+  }
+
   // FormData 생성
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("modelId", modelId.toString());
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/v1/messages/files/upload`, {
@@ -60,17 +71,27 @@ export async function uploadFile(
       // Content-Type은 자동으로 multipart/form-data로 설정됨 (boundary 포함)
     });
 
-    const data: ApiResponse<UploadFileResponse | ApiErrorDetail> =
+    const data: ApiResponse<MessageFileUploadResponse | ApiErrorDetail> =
       await response.json();
 
     // 성공 응답
     if (response.ok && data.success) {
-      return data as ApiResponse<UploadFileResponse>;
+      return data as ApiResponse<MessageFileUploadResponse>;
     }
 
     // 에러 응답
     const errorDetail = data.detail as ApiErrorDetail;
-    throw new Error(errorDetail.message || "파일 업로드에 실패했습니다.");
+
+    switch (errorDetail.code) {
+      case "VALIDATION_ERROR":
+        throw new Error(errorDetail.message || "파일 형식이 올바르지 않습니다.");
+      case "MODEL_NOT_FOUND":
+        throw new Error("선택한 AI 모델을 찾을 수 없습니다.");
+      case "INVALID_TOKEN":
+        throw new Error("인증이 필요합니다. 다시 로그인해주세요.");
+      default:
+        throw new Error(errorDetail.message || "파일 업로드에 실패했습니다.");
+    }
   } catch (error) {
     if (error instanceof Error) {
       throw error;
@@ -83,13 +104,14 @@ export async function uploadFile(
  * 여러 파일 업로드 (순차적으로 업로드)
  */
 export async function uploadFiles(
-  files: File[]
-): Promise<ApiResponse<UploadFileResponse>[]> {
-  const results: ApiResponse<UploadFileResponse>[] = [];
+  files: File[],
+  modelId: number
+): Promise<ApiResponse<MessageFileUploadResponse>[]> {
+  const results: ApiResponse<MessageFileUploadResponse>[] = [];
 
   for (const file of files) {
     try {
-      const result = await uploadFile(file);
+      const result = await uploadFile(file, modelId);
       results.push(result);
     } catch (error) {
       console.error(`Failed to upload ${file.name}:`, error);
@@ -104,8 +126,9 @@ export async function uploadFiles(
  * 여러 파일 업로드 (병렬 업로드)
  */
 export async function uploadFilesParallel(
-  files: File[]
-): Promise<PromiseSettledResult<ApiResponse<UploadFileResponse>>[]> {
-  const uploadPromises = files.map((file) => uploadFile(file));
+  files: File[],
+  modelId: number
+): Promise<PromiseSettledResult<ApiResponse<MessageFileUploadResponse>>[]> {
+  const uploadPromises = files.map((file) => uploadFile(file, modelId));
   return Promise.allSettled(uploadPromises);
 }

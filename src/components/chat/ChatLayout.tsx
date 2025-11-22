@@ -65,9 +65,11 @@ export function ChatLayout() {
     handleSendMessage,
     handleSubmit,
     isStreaming,
+    isUploadingFile,
     pastedImage,
     handlePasteImage,
     removePastedImage,
+    handleFileUpload,
   } = useChatWithAPI({
     roomId: roomId || "",
     modelId: selectedModelId,
@@ -196,6 +198,8 @@ export function ChatLayout() {
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}
+          onFileSelect={handleFileUpload}
+          isUploadingFile={isUploadingFile}
         />
       </div>
     </div>

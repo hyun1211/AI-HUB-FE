@@ -1,5 +1,6 @@
 // 파일 업로드 API 타입 정의
 
+// R2 파일 업로드 응답 (POST /api/v1/files/upload)
 export interface UploadFileResponse {
   fileUrl: string;
   fileName: string;
@@ -7,6 +8,17 @@ export interface UploadFileResponse {
   contentType: string;
   uploadedAt: string;
   expiresAt: string;
+}
+
+// AI 서버 파일 업로드 응답 (POST /api/v1/messages/files/upload)
+export interface MessageFileUploadResponse {
+  fileId: string;
+}
+
+// AI 서버 파일 업로드 요청 파라미터
+export interface MessageFileUploadParams {
+  file: File;
+  modelId: number;
 }
 
 export interface ApiResponse<T> {
