@@ -1,17 +1,52 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import svgPathsSidebar from "@/assets/svgs/sidebar";
-import { MOCK_CHAT_HISTORY } from "@/constants/chatHistory";
-import { ChatHistoryItem } from "@/types/chat";
+import { ChatRoom } from "@/types/room";
+import { getChatRooms } from "@/lib/api/room";
+import { SettingsMenu, SettingsButton } from "./SettingsMenu";
+
+// ISO 8601 날짜를 UI 표시용 포맷으로 변환
+function formatDate(isoDate: string): string {
+  const date = new Date(isoDate);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}.${month}.${day}`;
+}
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onDashboardClick?: () => void;
+  onBalanceClick?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: SidebarProps) {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 채팅방 목록 조회
+  const fetchChatRooms = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getChatRooms({ page: 0, size: 20, sort: "createdAt,desc" });
+      setChatRooms(response.detail.content);
+    } catch (error) {
+      console.error("Failed to fetch chat rooms:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // 사이드바가 열릴 때 채팅방 목록 조회
+  useEffect(() => {
+    if (isOpen) {
+      fetchChatRooms();
+    }
+  }, [isOpen, fetchChatRooms]);
+
   return (
     <>
       {/* Sidebar Overlay */}
@@ -24,7 +59,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-[316px] bg-[#1d1f21] z-50 transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-[316px] bg-[#1d1f21] z-50 transition-transform duration-300 flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:relative lg:z-0`}
       >
@@ -98,17 +133,37 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
         </div>
 
         {/* Chat History List */}
-        <div className="overflow-y-auto">
-          {MOCK_CHAT_HISTORY.map((chat: ChatHistoryItem) => (
-            <div key={chat.id} className="h-[45px] relative hover:bg-[#2c2e30] cursor-pointer">
-              <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] left-[17px] not-italic text-[16px] text-neutral-100 top-[10px] w-[149px] truncate">
-                {chat.title}
-              </p>
-              <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] right-[17px] not-italic text-[#444648] text-[13px] text-right top-[18px]">
-                {chat.date}
-              </p>
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-[#ff983f] border-t-transparent rounded-full animate-spin" />
             </div>
-          ))}
+          ) : chatRooms.length === 0 ? (
+            <div className="px-4 py-8 text-center text-[#929292] text-[14px]">
+              채팅 기록이 없습니다.
+            </div>
+          ) : (
+            chatRooms.map((room) => (
+              <div key={room.roomId} className="h-[45px] relative hover:bg-[#2c2e30] cursor-pointer">
+                <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] left-[17px] not-italic text-[16px] text-neutral-100 top-[10px] w-[149px] truncate">
+                  {room.title}
+                </p>
+                <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] right-[17px] not-italic text-[#444648] text-[13px] text-right top-[18px]">
+                  {formatDate(room.lastMessageAt || room.createdAt)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Settings Section - Bottom Left */}
+        <div className="relative border-t border-[#2c2e30] p-3">
+          <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+          <SettingsMenu
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            onBalanceClick={onBalanceClick}
+          />
         </div>
       </div>
     </>
