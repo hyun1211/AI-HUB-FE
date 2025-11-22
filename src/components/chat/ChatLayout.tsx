@@ -8,12 +8,14 @@ import { WelcomeMessage } from "./WelcomeMessage";
 import { SuggestedPrompts } from "./SuggestedPrompts";
 import { MessageList } from "./MessageList";
 import { Dashboard } from "../dashboard/Dashboard";
+import { Balance } from "../balance/Balance";
 import { useChat } from "@/hooks/useChat";
 import svgPathsMain from "@/assets/svgs/main";
 
 export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showBalance, setShowBalance] = useState(false);
   const {
     messages,
     message,
@@ -31,6 +33,11 @@ export function ChatLayout() {
     return <Dashboard onClose={() => setShowDashboard(false)} />;
   }
 
+  // Balance를 보여줄 때
+  if (showBalance) {
+    return <Balance onBack={() => setShowBalance(false)} />;
+  }
+
   return (
     <div className="flex h-screen w-full bg-zinc-950 overflow-hidden">
       <Sidebar
@@ -38,6 +45,10 @@ export function ChatLayout() {
         onClose={() => setSidebarOpen(false)}
         onDashboardClick={() => {
           setShowDashboard(true);
+          setSidebarOpen(false);
+        }}
+        onBalanceClick={() => {
+          setShowBalance(true);
           setSidebarOpen(false);
         }}
       />

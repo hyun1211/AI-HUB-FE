@@ -10,9 +10,10 @@ interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
   onDashboardClick?: () => void;
+  onBalanceClick?: () => void;
 }
 
-export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: SidebarProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
@@ -120,7 +121,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
           <SettingsMenu
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
-            onBalanceClick={onDashboardClick}
+            onBalanceClick={onBalanceClick}
           />
         </div>
       </div>
