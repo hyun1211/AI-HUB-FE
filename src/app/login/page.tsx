@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import loginSvgPaths from "@/assets/svgs/login";
+import { startKakaoLogin } from "@/lib/api/auth";
 
 function BackButton() {
   const router = useRouter();
@@ -27,7 +28,7 @@ function BackButton() {
 
 function KakaoLoginButton() {
   const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 로직 구현
+    startKakaoLogin();
   };
 
   return (

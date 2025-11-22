@@ -16,4 +16,13 @@ export interface Message {
   role: "user" | "assistant";
   timestamp: Date;
   image?: string; // base64 or blob URL
+  metadata?: {
+    userMessageId?: string;
+    aiResponseId?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+    tokenCount?: number;
+    coinCount?: number;
+    modelId?: number;
+  };
 }

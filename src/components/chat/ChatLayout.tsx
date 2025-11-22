@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Sidebar } from "./Sidebar";
 import { ModelSelector } from "./ModelSelector";
 import { ChatInput } from "./ChatInput";
@@ -9,13 +9,55 @@ import { SuggestedPrompts } from "./SuggestedPrompts";
 import { MessageList } from "./MessageList";
 import { Dashboard } from "../dashboard/Dashboard";
 import { Balance } from "../balance/Balance";
-import { useChat } from "@/hooks/useChat";
+import { useChatWithAPI } from "@/hooks/useChatWithAPI";
+import { createChatRoom } from "@/lib/api/room";
 import svgPathsMain from "@/assets/svgs/main";
+
+// 채팅방 제목 생성 함수 (현재 시간 기반)
+function generateChatRoomTitle(): string {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `새 대화 ${month}/${day} ${hours}:${minutes}`;
+}
 
 export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState(1);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  // 채팅방 생성 함수
+  const createNewChatRoom = useCallback(async (modelId: number) => {
+    setIsCreatingRoom(true);
+    try {
+      const response = await createChatRoom({
+        title: generateChatRoomTitle(),
+        modelId,
+      });
+      const newRoomId = response.detail.roomId;
+      setRoomId(newRoomId);
+      console.log(`Chat room created: ${newRoomId}`);
+      return newRoomId;
+    } catch (error) {
+      console.error("Failed to create chat room:", error);
+      throw error;
+    } finally {
+      setIsCreatingRoom(false);
+    }
+  }, []);
+
+  // 초기 채팅방 생성
+  useEffect(() => {
+    if (!roomId && selectedModelId > 0) {
+      createNewChatRoom(selectedModelId);
+    }
+  }, [roomId, selectedModelId, createNewChatRoom]);
+
   const {
     messages,
     message,
@@ -23,10 +65,30 @@ export function ChatLayout() {
     handleSendMessage,
     handleSubmit,
     isStreaming,
+    isUploadingFile,
     pastedImage,
     handlePasteImage,
     removePastedImage,
-  } = useChat();
+    handleFileUpload,
+  } = useChatWithAPI({
+    roomId: roomId || "",
+    modelId: selectedModelId,
+    onError: (error) => {
+      console.error("Chat error:", error.message);
+    },
+  });
+
+  // New Chat 버튼 클릭 핸들러
+  const handleNewChat = useCallback(async () => {
+    if (isCreatingRoom) return;
+    try {
+      await createNewChatRoom(selectedModelId);
+      // 메시지 초기화는 useChatWithAPI에서 roomId 변경 시 처리
+      window.location.reload(); // 간단하게 새로고침으로 상태 초기화
+    } catch (error) {
+      console.error("Failed to create new chat:", error);
+    }
+  }, [selectedModelId, isCreatingRoom, createNewChatRoom]);
 
   // Dashboard를 보여줄 때
   if (showDashboard) {
@@ -85,11 +147,20 @@ export function ChatLayout() {
             </button>
 
             {/* Model Selector */}
-            <ModelSelector />
+            <ModelSelector
+              onModelChange={(model, modelId) => {
+                setSelectedModelId(modelId);
+                console.log(`Model changed: ${model.name} (ID: ${modelId})`);
+              }}
+            />
           </div>
 
           {/* New Chat Button */}
-          <button className="h-[35px] rounded-[5px] px-4 border border-[#ff983f] flex items-center gap-2 hover:bg-[#ff983f]/10 transition-colors ml-auto">
+          <button
+            onClick={handleNewChat}
+            disabled={isCreatingRoom}
+            className="h-[35px] rounded-[5px] px-4 border border-[#ff983f] flex items-center gap-2 hover:bg-[#ff983f]/10 transition-colors ml-auto disabled:opacity-50"
+          >
             <div className="size-[11px]">
               <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 13 13">
                 <path d="M6.5 1L6.5 12M12 6.5L1 6.5" stroke="url(#paint0_linear_new_chat)" strokeLinecap="round" strokeWidth="2" />
@@ -123,10 +194,12 @@ export function ChatLayout() {
           message={message}
           setMessage={setMessage}
           onSubmit={handleSubmit}
-          isStreaming={isStreaming}
+          isStreaming={isStreaming || isCreatingRoom || !roomId}
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}
+          onFileSelect={handleFileUpload}
+          isUploadingFile={isUploadingFile}
         />
       </div>
     </div>

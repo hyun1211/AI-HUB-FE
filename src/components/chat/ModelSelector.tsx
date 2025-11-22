@@ -1,17 +1,35 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import svgPathsModel from "@/assets/svgs/model";
 import { AI_MODELS, DEFAULT_MODEL } from "@/constants/aiModels";
 import { AIModel } from "@/types/chat";
 import { useClickOutside } from "@/hooks/useClickOutside";
 
-export function ModelSelector() {
+interface ModelSelectorProps {
+  onModelChange?: (model: AIModel, modelId: number) => void;
+}
+
+// 임시 모델 ID 매핑 (실제로는 API에서 가져와야 함)
+const MODEL_ID_MAP: Record<string, number> = {
+  claude: 1,
+  gpt4o: 2,
+  "gpt4o-mini": 3,
+  gemini: 4,
+  grok: 5,
+};
+
+export function ModelSelector({ onModelChange }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(dropdownRef, () => setIsOpen(false));
+
+  // 초기 모델 전달
+  useEffect(() => {
+    onModelChange?.(DEFAULT_MODEL, MODEL_ID_MAP[DEFAULT_MODEL.id] || 1);
+  }, []);
 
   return (
     <div className="flex-1 flex justify-center">
@@ -53,6 +71,7 @@ export function ModelSelector() {
                   onClick={() => {
                     setSelectedModel(model);
                     setIsOpen(false);
+                    onModelChange?.(model, MODEL_ID_MAP[model.id] || 1);
                   }}
                   className={`bg-zinc-900/50 min-h-[7rem] w-full text-left pl-[2.7rem] py-[1.4rem] hover:bg-zinc-800 transition-colors rounded-md ${
                     selectedModel.id === model.id
