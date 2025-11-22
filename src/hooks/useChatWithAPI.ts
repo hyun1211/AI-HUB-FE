@@ -154,7 +154,6 @@ export function useChatWithAPI(options: UseChatOptions) {
                       ...m,
                       metadata: {
                         aiResponseId: data.aiResponseId,
-                        inputTokens: data.inputTokens,
                         outputTokens: data.outputTokens,
                       },
                     };
@@ -164,6 +163,7 @@ export function useChatWithAPI(options: UseChatOptions) {
                       ...m,
                       metadata: {
                         userMessageId: data.userMessageId,
+                        inputTokens: data.inputTokens,
                       },
                     };
                   }
