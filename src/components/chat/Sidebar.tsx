@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import svgPathsSidebar from "@/assets/svgs/sidebar";
 import { MOCK_CHAT_HISTORY } from "@/constants/chatHistory";
 import { ChatHistoryItem } from "@/types/chat";
+import { SettingsMenu, SettingsButton } from "./SettingsMenu";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -12,6 +13,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <>
       {/* Sidebar Overlay */}
@@ -24,7 +27,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-[316px] bg-[#1d1f21] z-50 transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-[316px] bg-[#1d1f21] z-50 transition-transform duration-300 flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 lg:relative lg:z-0`}
       >
@@ -98,7 +101,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
         </div>
 
         {/* Chat History List */}
-        <div className="overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {MOCK_CHAT_HISTORY.map((chat: ChatHistoryItem) => (
             <div key={chat.id} className="h-[45px] relative hover:bg-[#2c2e30] cursor-pointer">
               <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] left-[17px] not-italic text-[16px] text-neutral-100 top-[10px] w-[149px] truncate">
@@ -109,6 +112,16 @@ export function Sidebar({ isOpen, onClose, onDashboardClick }: SidebarProps) {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Settings Section - Bottom Left */}
+        <div className="relative border-t border-[#2c2e30] p-3">
+          <SettingsButton onClick={() => setIsSettingsOpen(true)} />
+          <SettingsMenu
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            onBalanceClick={onDashboardClick}
+          />
         </div>
       </div>
     </>
