@@ -10,13 +10,15 @@ interface ModelSelectorProps {
   onModelChange?: (model: AIModel, modelId: number) => void;
 }
 
-// 임시 모델 ID 매핑 (실제로는 API에서 가져와야 함)
+// 모델 ID 매핑 (서버에 등록된 모델 ID와 일치해야 함)
 const MODEL_ID_MAP: Record<string, number> = {
-  claude: 1,
-  gpt4o: 2,
-  "gpt4o-mini": 3,
-  gemini: 4,
-  grok: 5,
+  "gpt-5-mini": 1,
+  // TODO: 서버에 모델 추가 후 매핑 추가
+  // claude: 2,
+  // gpt4o: 3,
+  // "gpt4o-mini": 4,
+  // gemini: 5,
+  // grok: 6,
 };
 
 export function ModelSelector({ onModelChange }: ModelSelectorProps) {

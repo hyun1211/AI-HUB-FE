@@ -51,12 +51,7 @@ export function ChatLayout() {
     }
   }, []);
 
-  // 초기 채팅방 생성
-  useEffect(() => {
-    if (!roomId && selectedModelId > 0) {
-      createNewChatRoom(selectedModelId);
-    }
-  }, [roomId, selectedModelId, createNewChatRoom]);
+  // 첫 메시지 전송 시 채팅방이 자동 생성됨 (useChatWithAPI의 createRoom 콜백 사용)
 
   const {
     messages,
@@ -75,6 +70,13 @@ export function ChatLayout() {
     modelId: selectedModelId,
     onError: (error) => {
       console.error("Chat error:", error.message);
+    },
+    createRoom: async () => {
+      const newRoomId = await createNewChatRoom(selectedModelId);
+      return newRoomId;
+    },
+    onRoomCreated: (newRoomId) => {
+      setRoomId(newRoomId);
     },
   });
 

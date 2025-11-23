@@ -8,10 +8,12 @@ interface UseChatOptions {
   roomId: string;
   modelId: number;
   onError?: (error: Error) => void;
+  createRoom?: () => Promise<string>;
+  onRoomCreated?: (roomId: string) => void;
 }
 
 export function useChatWithAPI(options: UseChatOptions) {
-  const { roomId, modelId, onError } = options;
+  const { roomId, modelId, onError, createRoom, onRoomCreated } = options;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
@@ -75,6 +77,24 @@ export function useChatWithAPI(options: UseChatOptions) {
     ) => {
       if ((!msg.trim() && !imageData) || isStreaming) return;
 
+      // roomId가 없으면 먼저 채팅방 생성
+      let currentRoomId = roomId;
+      if (!currentRoomId && createRoom) {
+        try {
+          currentRoomId = await createRoom();
+          onRoomCreated?.(currentRoomId);
+        } catch (error) {
+          console.error("Failed to create room:", error);
+          onError?.(error instanceof Error ? error : new Error("채팅방 생성 실패"));
+          return;
+        }
+      }
+
+      if (!currentRoomId) {
+        onError?.(new Error("채팅방이 없습니다."));
+        return;
+      }
+
       let fileId: string | null = null;
 
       // 이미지가 있으면 먼저 업로드
@@ -120,7 +140,7 @@ export function useChatWithAPI(options: UseChatOptions) {
         abortControllerRef.current = new AbortController();
 
         await sendMessageWithStreaming(
-          roomId,
+          currentRoomId,
           {
             message: msg,
             modelId,
@@ -227,6 +247,8 @@ export function useChatWithAPI(options: UseChatOptions) {
       modelId,
       uploadImageData,
       onError,
+      createRoom,
+      onRoomCreated,
     ]
   );
 
