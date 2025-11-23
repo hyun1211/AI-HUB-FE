@@ -194,7 +194,7 @@ export function ChatLayout() {
           message={message}
           setMessage={setMessage}
           onSubmit={handleSubmit}
-          isStreaming={isStreaming || isCreatingRoom || !roomId}
+          isStreaming={isStreaming || isCreatingRoom}
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}
