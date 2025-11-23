@@ -27,7 +27,7 @@ export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(1);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
@@ -67,11 +67,14 @@ export function ChatLayout() {
     handleFileUpload,
   } = useChatWithAPI({
     roomId: roomId || "",
-    modelId: selectedModelId,
+    modelId: selectedModelId || 0,
     onError: (error) => {
       console.error("Chat error:", error.message);
     },
     createRoom: async () => {
+      if (!selectedModelId) {
+        throw new Error("모델을 선택해주세요.");
+      }
       const newRoomId = await createNewChatRoom(selectedModelId);
       return newRoomId;
     },
@@ -82,7 +85,7 @@ export function ChatLayout() {
 
   // New Chat 버튼 클릭 핸들러
   const handleNewChat = useCallback(async () => {
-    if (isCreatingRoom) return;
+    if (isCreatingRoom || !selectedModelId) return;
     try {
       await createNewChatRoom(selectedModelId);
       // 메시지 초기화는 useChatWithAPI에서 roomId 변경 시 처리
@@ -150,9 +153,9 @@ export function ChatLayout() {
 
             {/* Model Selector */}
             <ModelSelector
-              onModelChange={(model, modelId) => {
-                setSelectedModelId(modelId);
-                console.log(`Model changed: ${model.name} (ID: ${modelId})`);
+              onModelChange={(model) => {
+                setSelectedModelId(model.modelId);
+                console.log(`Model changed: ${model.displayName} (ID: ${model.modelId})`);
               }}
             />
           </div>
@@ -196,7 +199,7 @@ export function ChatLayout() {
           message={message}
           setMessage={setMessage}
           onSubmit={handleSubmit}
-          isStreaming={isStreaming || isCreatingRoom}
+          isStreaming={isStreaming || isCreatingRoom || !selectedModelId}
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}

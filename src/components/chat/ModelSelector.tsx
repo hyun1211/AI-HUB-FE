@@ -2,36 +2,82 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import svgPathsModel from "@/assets/svgs/model";
-import { AI_MODELS, DEFAULT_MODEL } from "@/constants/aiModels";
-import { AIModel } from "@/types/chat";
 import { useClickOutside } from "@/hooks/useClickOutside";
+import { getModels } from "@/lib/api/model";
+import { AIModel } from "@/types/model";
 
 interface ModelSelectorProps {
-  onModelChange?: (model: AIModel, modelId: number) => void;
+  onModelChange?: (model: AIModel) => void;
 }
-
-// 모델 ID 매핑 (서버에 등록된 모델 ID와 일치해야 함)
-const MODEL_ID_MAP: Record<string, number> = {
-  "gpt-5-mini": 1,
-  // TODO: 서버에 모델 추가 후 매핑 추가
-  // claude: 2,
-  // gpt4o: 3,
-  // "gpt4o-mini": 4,
-  // gemini: 5,
-  // grok: 6,
-};
 
 export function ModelSelector({ onModelChange }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<AIModel>(DEFAULT_MODEL);
+  const [models, setModels] = useState<AIModel[]>([]);
+  const [selectedModel, setSelectedModel] = useState<AIModel | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(dropdownRef, () => setIsOpen(false));
 
-  // 초기 모델 전달
+  // API에서 모델 목록 가져오기
   useEffect(() => {
-    onModelChange?.(DEFAULT_MODEL, MODEL_ID_MAP[DEFAULT_MODEL.id] || 1);
+    const fetchModels = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await getModels();
+        const activeModels = response.detail.filter((m) => m.isActive);
+        setModels(activeModels);
+
+        // 첫 번째 모델을 기본 선택
+        if (activeModels.length > 0) {
+          setSelectedModel(activeModels[0]);
+          onModelChange?.(activeModels[0]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch models:", err);
+        setError("모델 목록을 불러올 수 없습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchModels();
   }, []);
+
+  // 모델 선택 핸들러
+  const handleSelectModel = (model: AIModel) => {
+    setSelectedModel(model);
+    setIsOpen(false);
+    onModelChange?.(model);
+  };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex justify-center">
+        <div className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-[#444648] flex items-center justify-center">
+          <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[15px]">
+            로딩 중...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error || models.length === 0) {
+    return (
+      <div className="flex-1 flex justify-center">
+        <div className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-red-500/50 flex items-center justify-center">
+          <p className="font-['Pretendard:Regular',sans-serif] text-red-400 text-[13px]">
+            {error || "사용 가능한 모델이 없습니다"}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex justify-center">
@@ -41,7 +87,7 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
           className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-[#444648] flex items-center! justify-between gap-2 hover:border-[#666] transition-colors"
         >
           <p className="font-['Pretendard:Regular',sans-serif] text-[#e0e0e0] text-[15px] truncate">
-            {selectedModel.name}
+            {selectedModel?.displayName || "모델 선택"}
           </p>
           <div className="h-[17px] w-[13px] flex-shrink-0 relative flex items-center justify-center">
             <div
@@ -67,25 +113,21 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
         {isOpen && (
           <div className="absolute top-[3.5rem] left-0 bg-zinc-950 rounded-[8px] border border-zinc-800 z-50 shadow-lg w-[calc(100vw-4rem)] max-w-[30rem] p-3">
             <div className="flex flex-col gap-2">
-              {AI_MODELS.map((model) => (
+              {models.map((model) => (
                 <button
-                  key={model.id}
-                  onClick={() => {
-                    setSelectedModel(model);
-                    setIsOpen(false);
-                    onModelChange?.(model, MODEL_ID_MAP[model.id] || 1);
-                  }}
+                  key={model.modelId}
+                  onClick={() => handleSelectModel(model)}
                   className={`bg-zinc-900/50 min-h-[7rem] w-full text-left pl-[2.7rem] py-[1.4rem] hover:bg-zinc-800 transition-colors rounded-md ${
-                    selectedModel.id === model.id
+                    selectedModel?.modelId === model.modelId
                       ? "ring-2 ring-[#ff983f] bg-zinc-800 relative z-10"
                       : ""
                   }`}
                 >
                   <p className="font-['Pretendard:SemiBold',sans-serif] text-[16px] text-neutral-50 mb-1">
-                    {model.name}
+                    {model.displayName}
                   </p>
                   <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[13px] leading-relaxed">
-                    {model.description}
+                    {model.displayExplain}
                   </p>
                 </button>
               ))}
