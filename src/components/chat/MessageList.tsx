@@ -209,26 +209,26 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
               )}
 
               {/* 메시지 하단 정보 (시간, 토큰) */}
-              <div className={`flex items-center gap-2 mt-2 text-[11px] opacity-60 ${
+              <div className={`flex items-center gap-2 mt-2 text-[11px] ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}>
-                {/* 토큰 표시 - 사용자 메시지 */}
+                {/* 토큰 표시 - 사용자 메시지 (흰색) */}
                 {message.role === "user" && message.metadata?.inputTokens && (
-                  <span className="text-[10px] text-[#929292]">
+                  <span className="text-[10px] text-white/80">
                     {message.metadata.inputTokens.toLocaleString()} tokens
                   </span>
                 )}
 
-                {/* 토큰 표시 - AI 응답 */}
+                {/* 토큰 표시 - AI 응답 (회색) */}
                 {message.role === "assistant" && message.metadata?.outputTokens && (
                   <span className="text-[10px] text-[#929292]">
                     {message.metadata.outputTokens.toLocaleString()} tokens
                   </span>
                 )}
 
-                {/* 시간 표시 - 사용자 메시지에만 */}
+                {/* 시간 표시 - 사용자 메시지에만 (흰색) */}
                 {message.role === "user" && (
-                  <span>
+                  <span className="text-white/80">
                     {message.timestamp.toLocaleTimeString("ko-KR", {
                       hour: "2-digit",
                       minute: "2-digit",
