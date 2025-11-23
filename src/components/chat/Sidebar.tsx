@@ -47,6 +47,11 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onC
     }
   }, []);
 
+  // 컴포넌트 마운트 시 초기 로드
+  useEffect(() => {
+    fetchChatRooms();
+  }, [fetchChatRooms]);
+
   // 사이드바가 열릴 때 채팅방 목록 조회
   useEffect(() => {
     if (isOpen) {
