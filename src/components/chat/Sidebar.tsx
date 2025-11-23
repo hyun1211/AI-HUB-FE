@@ -21,10 +21,11 @@ interface SidebarProps {
   onDashboardClick?: () => void;
   onBalanceClick?: () => void;
   onChatRoomClick?: (roomId: string) => void;
+  onNewChatClick?: () => void;
   refreshTrigger?: number; // 이 값이 변경되면 채팅방 목록을 새로고침
 }
 
-export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onChatRoomClick, refreshTrigger }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onChatRoomClick, onNewChatClick, refreshTrigger }: SidebarProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -80,12 +81,15 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onC
         <div className="h-[54px] border-b border-[#2c2e30]" />
 
         {/* New Chat Section */}
-        <div className="h-[57px] border-b border-[#2c2e30] relative">
+        <button
+          onClick={onNewChatClick}
+          className="h-[57px] border-b border-[#2c2e30] relative w-full hover:bg-[#2c2e30] transition-colors"
+        >
           <p className="absolute font-['Pretendard:SemiBold',sans-serif] leading-[normal] left-[5rem] not-italic text-[#ff7600] text-[16px] text-nowrap top-[1.7rem] whitespace-pre">
             new 채팅
           </p>
           <img src="/pencil.svg" alt="pencil" className="absolute left-[7px] top-[10px]" />
-        </div>
+        </button>
 
         {/* Previous Chats Section */}
         <div className="h-[57px] border-b border-[#2c2e30] relative">

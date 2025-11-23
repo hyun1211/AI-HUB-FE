@@ -137,6 +137,10 @@ export function ChatLayout() {
           setSidebarOpen(false);
         }}
         onChatRoomClick={handleChatRoomClick}
+        onNewChatClick={() => {
+          handleNewChat();
+          setSidebarOpen(false);
+        }}
         refreshTrigger={sidebarRefreshTrigger}
       />
 
