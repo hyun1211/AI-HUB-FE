@@ -99,16 +99,13 @@ export function useChat() {
                   );
                 }
               } catch (e) {
-                console.error("Failed to parse SSE data:", e);
               }
             }
           }
         }
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          console.log("Stream aborted");
         } else {
-          console.error("Error streaming message:", error);
           // 에러 발생 시 에러 메시지 표시
           setMessages((prev) =>
             prev.map((m) =>

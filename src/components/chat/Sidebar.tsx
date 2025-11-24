@@ -20,9 +20,12 @@ interface SidebarProps {
   onClose: () => void;
   onDashboardClick?: () => void;
   onBalanceClick?: () => void;
+  onChatRoomClick?: (roomId: string) => void;
+  onNewChatClick?: () => void;
+  refreshTrigger?: number; // 이 값이 변경되면 채팅방 목록을 새로고침
 }
 
-export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onChatRoomClick, onNewChatClick, refreshTrigger }: SidebarProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -32,13 +35,21 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: S
     setIsLoading(true);
     try {
       const response = await getChatRooms({ page: 0, size: 20, sort: "createdAt,desc" });
-      setChatRooms(response.detail.content);
+      // 메시지가 있는 채팅방만 필터링 (lastMessageAt이 있는 경우)
+      const roomsWithMessages = response.detail.content.filter(
+        (room) => room.lastMessageAt && room.lastMessageAt.trim() !== ""
+      );
+      setChatRooms(roomsWithMessages);
     } catch (error) {
-      console.error("Failed to fetch chat rooms:", error);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  // 컴포넌트 마운트 시 초기 로드
+  useEffect(() => {
+    fetchChatRooms();
+  }, [fetchChatRooms]);
 
   // 사이드바가 열릴 때 채팅방 목록 조회
   useEffect(() => {
@@ -46,6 +57,13 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: S
       fetchChatRooms();
     }
   }, [isOpen, fetchChatRooms]);
+
+  // refreshTrigger가 변경되면 채팅방 목록 새로고침
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      fetchChatRooms();
+    }
+  }, [refreshTrigger, fetchChatRooms]);
 
   return (
     <>
@@ -67,28 +85,15 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: S
         <div className="h-[54px] border-b border-[#2c2e30]" />
 
         {/* New Chat Section */}
-        <div className="h-[57px] border-b border-[#2c2e30] relative">
+        <button
+          onClick={onNewChatClick}
+          className="h-[57px] border-b border-[#2c2e30] relative w-full hover:bg-[#2c2e30] transition-colors"
+        >
           <p className="absolute font-['Pretendard:SemiBold',sans-serif] leading-[normal] left-[5rem] not-italic text-[#ff7600] text-[16px] text-nowrap top-[1.7rem] whitespace-pre">
             new 채팅
           </p>
           <img src="/pencil.svg" alt="pencil" className="absolute left-[7px] top-[10px]" />
-        </div>
-
-        {/* Previous Chats Section */}
-        <div className="h-[57px] border-b border-[#2c2e30] relative">
-          <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] left-[calc(12.5%+2.75px)] not-italic text-[16px] text-neutral-100 text-nowrap top-[20px] whitespace-pre">
-            이전 기록
-          </p>
-          <div className="absolute left-[5px] size-[30px] top-[13px]" data-name="message-circle">
-            <div className="absolute inset-[12.5%]" data-name="Icon">
-              <div className="absolute inset-[-4.44%]" style={{ "--stroke-0": "rgba(245, 245, 245, 1)" } as React.CSSProperties}>
-                <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 25 25">
-                  <path d={svgPathsSidebar.p2874a000} id="Icon" stroke="var(--stroke-0, #F5F5F5)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+        </button>
 
         {/* AI Usage Section */}
         <button
@@ -133,7 +138,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: S
         </div>
 
         {/* Chat History List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-6 h-6 border-2 border-[#ff983f] border-t-transparent rounded-full animate-spin" />
@@ -144,7 +149,11 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick }: S
             </div>
           ) : (
             chatRooms.map((room) => (
-              <div key={room.roomId} className="h-[45px] relative hover:bg-[#2c2e30] cursor-pointer">
+              <div
+                key={room.roomId}
+                className="h-[45px] relative hover:bg-[#2c2e30] cursor-pointer"
+                onClick={() => onChatRoomClick?.(room.roomId)}
+              >
                 <p className="absolute font-['Pretendard:Regular',sans-serif] leading-[normal] left-[17px] not-italic text-[16px] text-neutral-100 top-[10px] w-[149px] truncate">
                   {room.title}
                 </p>

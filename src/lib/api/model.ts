@@ -15,6 +15,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
  */
 export async function getModels(): Promise<ApiResponse<AIModel[]>> {
   try {
+
     const response = await fetch(`${API_BASE_URL}/api/v1/models`, {
       method: "GET",
       credentials: "include", // 쿠키 포함 (선택적)
@@ -23,8 +24,10 @@ export async function getModels(): Promise<ApiResponse<AIModel[]>> {
       },
     });
 
+
     const data: ApiResponse<AIModel[]> | ApiResponse<ApiErrorDetail> =
       await response.json();
+
 
     // 성공 응답 (200 OK)
     if (response.ok && data.success) {

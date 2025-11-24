@@ -789,7 +789,6 @@ import { validateFile } from "@/lib/api/upload";
 
 const validation = validateFile(file);
 if (!validation.isValid) {
-  console.error(validation.error);
 }
 ```
 

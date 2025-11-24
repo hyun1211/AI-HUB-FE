@@ -53,8 +53,7 @@ export default function AdminPage() {
   };
 
   const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    alert("AI 모델이 등록되었습니다!");
+    // alert("AI 모델이 등록되었습니다!");
     // Reset form
     setFormData({
       modelName: "",

@@ -3,8 +3,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
+import remarkBreaks from "remark-breaks";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Message } from "@/types/chat";
+import "katex/dist/katex.min.css";
 
 interface MessageListProps {
   messages: Message[];
@@ -27,7 +32,6 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
       setCopiedId(messageId);
       setTimeout(() => setCopiedId(null), 2000); // 2초 후 복사 상태 초기화
     } catch (err) {
-      console.error("복사 실패:", err);
     }
   };
 
@@ -36,11 +40,11 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }
 
   return (
-    <div className="absolute top-[75px] bottom-[120px] left-0 right-0 overflow-y-auto px-[21px] z-20">
+    <div className="absolute top-[75px] bottom-[120px] left-0 right-0 overflow-y-auto px-[21px] z-20 scrollbar-hide">
       <div className="max-w-[800px] mx-auto space-y-6 py-6">
         {messages.map((message) => (
           <div
-            key={message.id}
+            key={`${message.id}-${message.content.length}`}
             className={`flex ${
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
@@ -95,10 +99,11 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                 <div className="font-['Pretendard:Regular',sans-serif] !text-[1.6rem] break-words markdown-content">
                   {message.role === "assistant" ? (
                     <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      rehypePlugins={[rehypeHighlight]}
+                      key={`md-${message.id}-${message.content.length}`}
+                      remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
                       components={{
-                        // 코드 블록 스타일링
+                        // 코드 블록 스타일링 (react-syntax-highlighter 사용)
                         code: ({ node, className, children, ...props }) => {
                           const match = /language-(\w+)/.exec(className || "");
                           const isInline = !match;
@@ -110,15 +115,24 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                               {children}
                             </code>
                           ) : (
-                            <code className={`${className} !text-[1.6rem]`} {...props}>
-                              {children}
-                            </code>
+                            <SyntaxHighlighter
+                              style={oneDark}
+                              language={match ? match[1] : "text"}
+                              PreTag="div"
+                              customStyle={{
+                                margin: 0,
+                                borderRadius: "0.5rem",
+                                fontSize: "1.4rem",
+                              }}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
                           );
                         },
                         pre: ({ children }) => (
-                          <pre className="bg-[rgba(0,0,0,0.3)] p-3 rounded-lg overflow-x-auto my-2 border border-[#444648]">
+                          <div className="my-2 overflow-x-auto">
                             {children}
-                          </pre>
+                          </div>
                         ),
                         // 링크 스타일링
                         a: ({ children, ...props }) => (
@@ -209,26 +223,26 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
               )}
 
               {/* 메시지 하단 정보 (시간, 토큰) */}
-              <div className={`flex items-center gap-2 mt-2 text-[11px] opacity-60 ${
+              <div className={`flex items-center gap-2 mt-2 text-[11px] ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}>
-                {/* 토큰 표시 - 사용자 메시지 */}
+                {/* 토큰 표시 - 사용자 메시지 (흰색) */}
                 {message.role === "user" && message.metadata?.inputTokens && (
-                  <span className="text-[10px] text-[#929292]">
+                  <span className="text-[10px] text-white/80">
                     {message.metadata.inputTokens.toLocaleString()} tokens
                   </span>
                 )}
 
-                {/* 토큰 표시 - AI 응답 */}
+                {/* 토큰 표시 - AI 응답 (회색) */}
                 {message.role === "assistant" && message.metadata?.outputTokens && (
                   <span className="text-[10px] text-[#929292]">
                     {message.metadata.outputTokens.toLocaleString()} tokens
                   </span>
                 )}
 
-                {/* 시간 표시 - 사용자 메시지에만 */}
+                {/* 시간 표시 - 사용자 메시지에만 (흰색) */}
                 {message.role === "user" && (
-                  <span>
+                  <span className="text-white/80">
                     {message.timestamp.toLocaleTimeString("ko-KR", {
                       hour: "2-digit",
                       minute: "2-digit",

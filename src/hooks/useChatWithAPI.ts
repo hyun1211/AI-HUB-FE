@@ -1,17 +1,21 @@
 import { useState, useCallback, useRef } from "react";
 import { Message } from "@/types/chat";
-import { sendMessageWithStreaming } from "@/lib/api/message";
+import { sendMessageWithStreaming, getMessages, convertToUIMessages } from "@/lib/api/message";
 import { uploadFile } from "@/lib/api/upload";
 import { SSECompletedData } from "@/types/message";
+import { ALLOWED_IMAGE_TYPES } from "@/types/upload";
 
 interface UseChatOptions {
   roomId: string;
   modelId: number;
   onError?: (error: Error) => void;
+  createRoom?: () => Promise<string>;
+  onRoomCreated?: (roomId: string) => void;
+  onMessageComplete?: () => void; // 메시지 전송 완료 시 호출
 }
 
 export function useChatWithAPI(options: UseChatOptions) {
-  const { roomId, modelId, onError } = options;
+  const { roomId, modelId, onError, createRoom, onRoomCreated, onMessageComplete } = options;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
@@ -21,20 +25,34 @@ export function useChatWithAPI(options: UseChatOptions) {
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 파일 업로드 처리
+  // 파일 업로드 처리 (즉시 업로드하고 fileId 저장)
   const handleFileUpload = useCallback(
-    async (file: File) => {
+    async (file: File): Promise<{ fileId: string; fileUrl: string } | null> => {
+      if (!modelId) {
+        const error = new Error("AI 모델이 선택되지 않았습니다.");
+        onError?.(error);
+        return null;
+      }
+
+      // 이미지 형식 검증 (jpg, jpeg, png, webp만 허용)
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+        const error = new Error("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+        onError?.(error);
+        return null;
+      }
+
       setIsUploadingFile(true);
       try {
         const response = await uploadFile(file, modelId);
-        // AI 서버에서 발급한 fileId 반환
+        // 업로드된 파일 ID 저장 (메시지 전송 시 사용)
         const fileId = response.detail.fileId;
+        const fileUrl = response.detail.fileUrl;
         setUploadedFileId(fileId);
-        return fileId;
+        return { fileId, fileUrl };
       } catch (err) {
         const error = err instanceof Error ? err : new Error("파일 업로드 실패");
         onError?.(error);
-        throw error;
+        return null;
       } finally {
         setIsUploadingFile(false);
       }
@@ -42,12 +60,20 @@ export function useChatWithAPI(options: UseChatOptions) {
     [modelId, onError]
   );
 
-  // 이미지 데이터를 파일로 변환하여 업로드
+  // 이미지 데이터(base64)를 파일로 변환하여 즉시 업로드
   const uploadImageData = useCallback(
-    async (imageData: string) => {
+    async (imageData: string): Promise<{ fileId: string; fileUrl: string } | null> => {
       // base64 데이터를 Blob으로 변환
       const base64Data = imageData.split(",")[1];
       const mimeType = imageData.split(",")[0].split(":")[1].split(";")[0];
+
+      // 이미지 형식 검증
+      if (!ALLOWED_IMAGE_TYPES.includes(mimeType as typeof ALLOWED_IMAGE_TYPES[number])) {
+        const error = new Error("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+        onError?.(error);
+        return null;
+      }
+
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
 
@@ -57,13 +83,16 @@ export function useChatWithAPI(options: UseChatOptions) {
 
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: mimeType });
-      const file = new File([blob], `pasted-image-${Date.now()}.png`, {
+
+      // 파일 확장자 결정
+      const ext = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+      const file = new File([blob], `pasted-image-${Date.now()}.${ext}`, {
         type: mimeType,
       });
 
       return handleFileUpload(file);
     },
-    [handleFileUpload]
+    [handleFileUpload, onError]
   );
 
   // SSE 스트리밍으로 메시지 전송
@@ -73,19 +102,28 @@ export function useChatWithAPI(options: UseChatOptions) {
       imageData?: string | null,
       previousResponseId?: string
     ) => {
-      if ((!msg.trim() && !imageData) || isStreaming) return;
+      // 메시지가 없고 이미지도 없으면 전송 불가
+      if ((!msg.trim() && !imageData && !uploadedFileId) || isStreaming) return;
 
-      let fileId: string | null = null;
-
-      // 이미지가 있으면 먼저 업로드
-      if (imageData) {
+      // roomId가 없으면 먼저 채팅방 생성
+      let currentRoomId = roomId;
+      if (!currentRoomId && createRoom) {
         try {
-          fileId = await uploadImageData(imageData);
+          currentRoomId = await createRoom();
+          onRoomCreated?.(currentRoomId);
         } catch (error) {
-          console.error("Image upload failed:", error);
+          onError?.(error instanceof Error ? error : new Error("채팅방 생성 실패"));
           return;
         }
       }
+
+      if (!currentRoomId) {
+        onError?.(new Error("채팅방이 없습니다."));
+        return;
+      }
+
+      // 이미 업로드된 fileId 사용 (이미지 선택/붙여넣기 시 즉시 업로드됨)
+      const fileIdToSend = uploadedFileId;
 
       // 사용자 메시지 추가
       const userMessageId = Date.now().toString();
@@ -120,16 +158,15 @@ export function useChatWithAPI(options: UseChatOptions) {
         abortControllerRef.current = new AbortController();
 
         await sendMessageWithStreaming(
-          roomId,
+          currentRoomId,
           {
             message: msg,
             modelId,
-            fileId: fileId || undefined,
+            fileId: fileIdToSend || undefined,
             previousResponseId,
           },
           {
             onStart: () => {
-              console.log("Streaming started");
             },
             onDelta: (text) => {
               accumulatedContent += text;
@@ -144,7 +181,6 @@ export function useChatWithAPI(options: UseChatOptions) {
               );
             },
             onCompleted: (data: SSECompletedData) => {
-              console.log("Streaming completed:", data);
 
               // 최종 메시지에 메타데이터 추가
               setMessages((prev) =>
@@ -172,9 +208,10 @@ export function useChatWithAPI(options: UseChatOptions) {
               );
 
               setIsStreaming(false);
+              // 메시지 전송 완료 콜백 호출
+              onMessageComplete?.();
             },
             onError: (error) => {
-              console.error("Streaming error:", error);
 
               // 에러 메시지 표시
               setMessages((prev) =>
@@ -196,9 +233,7 @@ export function useChatWithAPI(options: UseChatOptions) {
         );
       } catch (error) {
         if ((error as Error).name === "AbortError") {
-          console.log("Stream aborted");
         } else {
-          console.error("Error streaming message:", error);
 
           const err = error instanceof Error ? error : new Error("전송 실패");
 
@@ -225,8 +260,11 @@ export function useChatWithAPI(options: UseChatOptions) {
       isStreaming,
       roomId,
       modelId,
-      uploadImageData,
+      uploadedFileId,
       onError,
+      createRoom,
+      onRoomCreated,
+      onMessageComplete,
     ]
   );
 
@@ -249,15 +287,33 @@ export function useChatWithAPI(options: UseChatOptions) {
     }
   }, []);
 
-  // 이미지 붙여넣기 처리
-  const handlePasteImage = useCallback((imageData: string) => {
+  // 이미지 붙여넣기 처리 (미리보기 설정 + 즉시 업로드)
+  const handlePasteImage = useCallback(async (imageData: string) => {
     setPastedImage(imageData);
-  }, []);
+    // 이미지를 붙여넣으면 즉시 업로드
+    await uploadImageData(imageData);
+  }, [uploadImageData]);
 
-  // 이미지 제거
+  // 이미지 제거 (삭제 시 fileId도 함께 제거)
   const removePastedImage = useCallback(() => {
     setPastedImage(null);
     setUploadedFileId(null);
+  }, []);
+
+  // 특정 채팅방의 메시지 로드
+  const loadMessagesForRoom = useCallback(async (targetRoomId: string) => {
+    try {
+      const response = await getMessages({ roomId: targetRoomId, page: 0, size: 100, sort: "createdAt,asc" });
+      const uiMessages = convertToUIMessages(response.detail.content);
+      setMessages(uiMessages as Message[]);
+    } catch (error) {
+      onError?.(error instanceof Error ? error : new Error("메시지 로드 실패"));
+    }
+  }, [onError]);
+
+  // 메시지 초기화
+  const clearMessages = useCallback(() => {
+    setMessages([]);
   }, []);
 
   return {
@@ -273,5 +329,7 @@ export function useChatWithAPI(options: UseChatOptions) {
     handlePasteImage,
     removePastedImage,
     handleFileUpload,
+    loadMessagesForRoom,
+    clearMessages,
   };
 }

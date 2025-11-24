@@ -125,7 +125,11 @@ export async function sendMessageWithStreaming(
         }
 
         if (trimmedLine.startsWith("data:")) {
-          const data = trimmedLine.slice(5).trim();
+          // SSE 표준: data: 뒤의 첫 번째 공백만 선택적 구분자로 제거, 나머지는 보존
+          let data = trimmedLine.slice(5);
+          if (data.startsWith(" ")) {
+            data = data.slice(1);
+          }
 
           switch (currentEvent) {
             case "started":
@@ -141,7 +145,6 @@ export async function sendMessageWithStreaming(
                 const completedData: SSECompletedData = JSON.parse(data);
                 callbacks.onCompleted?.(completedData);
               } catch (e) {
-                console.error("Failed to parse completed data:", e);
               }
               break;
           }
@@ -151,7 +154,6 @@ export async function sendMessageWithStreaming(
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === "AbortError") {
-        console.log("Stream aborted");
         return;
       }
       callbacks.onError?.(error);
@@ -290,8 +292,11 @@ export function convertToUIMessages(apiMessages: ApiMessage[]) {
     content: msg.content,
     role: msg.role,
     timestamp: new Date(msg.createdAt),
-    // 추가 정보는 필요시 확장 가능
     metadata: {
+      // role에 따라 inputTokens 또는 outputTokens로 매핑
+      ...(msg.role === "user"
+        ? { inputTokens: msg.tokenCount, userMessageId: msg.messageId }
+        : { outputTokens: msg.tokenCount, aiResponseId: msg.messageId }),
       tokenCount: msg.tokenCount,
       coinCount: msg.coinCount,
       modelId: msg.modelId,

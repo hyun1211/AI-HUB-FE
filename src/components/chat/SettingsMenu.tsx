@@ -1,6 +1,18 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { logout } from "@/lib/api/auth";
+
+// 쿠키에서 값을 읽는 헬퍼 함수
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(";").shift() || null;
+  }
+  return null;
+}
 
 interface MenuItemProps {
   icon: string;
@@ -32,19 +44,37 @@ interface SettingsMenuProps {
 }
 
 export function SettingsMenu({ isOpen, onClose, onBalanceClick }: SettingsMenuProps) {
-  const handleLogout = () => {
-    console.log("로그아웃 클릭");
-    onClose();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      const refreshToken = getCookie("refreshToken");
+
+      if (refreshToken) {
+        await logout({ refreshToken });
+      }
+
+      // 로그아웃 성공 시 로그인 페이지로 이동
+      router.push("/login");
+    } catch (error) {
+      // 에러가 발생해도 로그인 페이지로 이동 (쿠키가 만료된 경우 등)
+      router.push("/login");
+    } finally {
+      setIsLoggingOut(false);
+      onClose();
+    }
   };
 
   const handleBalance = () => {
-    console.log("잔액 조회 클릭");
     onBalanceClick?.();
     onClose();
   };
 
   const handleHistory = () => {
-    console.log("코인 거래 내역 조회 클릭");
     onClose();
   };
 

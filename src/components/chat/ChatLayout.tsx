@@ -10,6 +10,7 @@ import { MessageList } from "./MessageList";
 import { Dashboard } from "../dashboard/Dashboard";
 import { Balance } from "../balance/Balance";
 import { useChatWithAPI } from "@/hooks/useChatWithAPI";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { createChatRoom } from "@/lib/api/room";
 import svgPathsMain from "@/assets/svgs/main";
 
@@ -27,9 +28,13 @@ export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
-  const [selectedModelId, setSelectedModelId] = useState(1);
+  const [selectedModelId, setSelectedModelId] = useState<number | null>(null);
+
+  // 현재 로그인한 사용자 정보 조회
+  const { user } = useCurrentUser();
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
   // 채팅방 생성 함수
   const createNewChatRoom = useCallback(async (modelId: number) => {
@@ -41,22 +46,15 @@ export function ChatLayout() {
       });
       const newRoomId = response.detail.roomId;
       setRoomId(newRoomId);
-      console.log(`Chat room created: ${newRoomId}`);
       return newRoomId;
     } catch (error) {
-      console.error("Failed to create chat room:", error);
       throw error;
     } finally {
       setIsCreatingRoom(false);
     }
   }, []);
 
-  // 초기 채팅방 생성
-  useEffect(() => {
-    if (!roomId && selectedModelId > 0) {
-      createNewChatRoom(selectedModelId);
-    }
-  }, [roomId, selectedModelId, createNewChatRoom]);
+  // 첫 메시지 전송 시 채팅방이 자동 생성됨 (useChatWithAPI의 createRoom 콜백 사용)
 
   const {
     messages,
@@ -70,25 +68,52 @@ export function ChatLayout() {
     handlePasteImage,
     removePastedImage,
     handleFileUpload,
+    loadMessagesForRoom,
+    clearMessages,
   } = useChatWithAPI({
     roomId: roomId || "",
-    modelId: selectedModelId,
+    modelId: selectedModelId || 0,
     onError: (error) => {
-      console.error("Chat error:", error.message);
+    },
+    createRoom: async () => {
+      if (!selectedModelId) {
+        throw new Error("모델을 선택해주세요.");
+      }
+      const newRoomId = await createNewChatRoom(selectedModelId);
+      return newRoomId;
+    },
+    onRoomCreated: (newRoomId) => {
+      setRoomId(newRoomId);
+    },
+    onMessageComplete: () => {
+      // 메시지 전송 완료 시 사이드바 채팅방 목록 새로고침
+      setSidebarRefreshTrigger((prev) => prev + 1);
     },
   });
 
   // New Chat 버튼 클릭 핸들러
   const handleNewChat = useCallback(async () => {
-    if (isCreatingRoom) return;
+    if (isCreatingRoom || !selectedModelId) return;
     try {
       await createNewChatRoom(selectedModelId);
-      // 메시지 초기화는 useChatWithAPI에서 roomId 변경 시 처리
-      window.location.reload(); // 간단하게 새로고침으로 상태 초기화
+      clearMessages();
+      setSidebarRefreshTrigger((prev) => prev + 1);
     } catch (error) {
-      console.error("Failed to create new chat:", error);
     }
-  }, [selectedModelId, isCreatingRoom, createNewChatRoom]);
+  }, [selectedModelId, isCreatingRoom, createNewChatRoom, clearMessages]);
+
+  // 채팅방 클릭 핸들러 (사이드바에서 채팅방 선택 시)
+  const handleChatRoomClick = useCallback(async (clickedRoomId: string) => {
+    if (clickedRoomId === roomId) {
+      // 이미 같은 채팅방이면 사이드바만 닫기
+      setSidebarOpen(false);
+      return;
+    }
+
+    setRoomId(clickedRoomId);
+    await loadMessagesForRoom(clickedRoomId);
+    setSidebarOpen(false);
+  }, [roomId, loadMessagesForRoom]);
 
   // Dashboard를 보여줄 때
   if (showDashboard) {
@@ -113,6 +138,12 @@ export function ChatLayout() {
           setShowBalance(true);
           setSidebarOpen(false);
         }}
+        onChatRoomClick={handleChatRoomClick}
+        onNewChatClick={() => {
+          handleNewChat();
+          setSidebarOpen(false);
+        }}
+        refreshTrigger={sidebarRefreshTrigger}
       />
 
       {/* Main Content */}
@@ -148,9 +179,8 @@ export function ChatLayout() {
 
             {/* Model Selector */}
             <ModelSelector
-              onModelChange={(model, modelId) => {
-                setSelectedModelId(modelId);
-                console.log(`Model changed: ${model.name} (ID: ${modelId})`);
+              onModelChange={(model) => {
+                setSelectedModelId(model.modelId);
               }}
             />
           </div>
@@ -181,7 +211,7 @@ export function ChatLayout() {
         {/* Welcome Message and Suggested Prompts - only show when no messages */}
         {messages.length === 0 && (
           <>
-            <WelcomeMessage />
+            <WelcomeMessage username={user?.username || user?.email?.split("@")[0]} />
             <SuggestedPrompts onPromptClick={handleSendMessage} />
           </>
         )}
@@ -194,7 +224,7 @@ export function ChatLayout() {
           message={message}
           setMessage={setMessage}
           onSubmit={handleSubmit}
-          isStreaming={isStreaming || isCreatingRoom || !roomId}
+          isStreaming={isStreaming || isCreatingRoom || !selectedModelId}
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}
