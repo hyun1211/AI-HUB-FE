@@ -155,7 +155,7 @@ export function Sidebar({ isOpen, onClose, onDashboardClick, onBalanceClick, onC
         </div>
 
         {/* Chat History List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="w-6 h-6 border-2 border-[#ff983f] border-t-transparent rounded-full animate-spin" />

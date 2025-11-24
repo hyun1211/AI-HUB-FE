@@ -36,7 +36,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }
 
   return (
-    <div className="absolute top-[75px] bottom-[120px] left-0 right-0 overflow-y-auto px-[21px] z-20">
+    <div className="absolute top-[75px] bottom-[120px] left-0 right-0 overflow-y-auto px-[21px] z-20 scrollbar-hide">
       <div className="max-w-[800px] mx-auto space-y-6 py-6">
         {messages.map((message) => (
           <div

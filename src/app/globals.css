@@ -292,3 +292,13 @@ html {
 .hljs-strong {
   font-weight: bold;
 }
+
+/* 스크롤바 숨기기 (스크롤은 유지) */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE, Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
