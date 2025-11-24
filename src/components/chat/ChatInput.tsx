@@ -2,7 +2,7 @@
 
 import React, { useRef } from "react";
 import svgPathsMain from "@/assets/svgs/main";
-import { ALLOWED_EXTENSIONS } from "@/types/upload";
+import { ALLOWED_EXTENSIONS, ALLOWED_IMAGE_TYPES } from "@/types/upload";
 
 interface ChatInputProps {
   message: string;
@@ -36,12 +36,22 @@ export function ChatInput({
     }
   };
 
-  // 파일 선택 처리
+  // 파일 선택 처리 (이미지 형식만 허용)
+  // onPasteImage를 통해 미리보기 + 즉시 업로드가 처리됨
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && onFileSelect) {
-      // 이미지인 경우 미리보기도 표시
-      if (file.type.startsWith("image/") && onPasteImage) {
+    if (file) {
+      // 이미지 형식 검증 (jpg, jpeg, png, webp만 허용)
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+        alert("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // 파일을 base64로 변환 후 onPasteImage 호출 (미리보기 + 즉시 업로드)
+      if (onPasteImage) {
         const reader = new FileReader();
         reader.onload = (event) => {
           const base64 = event.target?.result as string;
@@ -49,7 +59,6 @@ export function ChatInput({
         };
         reader.readAsDataURL(file);
       }
-      onFileSelect(file);
     }
     // input 초기화 (같은 파일 다시 선택 가능하도록)
     if (fileInputRef.current) {
@@ -62,7 +71,7 @@ export function ChatInput({
     fileInputRef.current?.click();
   };
 
-  // 클립보드 붙여넣기 처리
+  // 클립보드 붙여넣기 처리 (이미지 형식만 허용)
   const handlePaste = async (e: React.ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -72,10 +81,17 @@ export function ChatInput({
 
       // 이미지 타입인 경우
       if (item.type.indexOf("image") !== -1) {
+        // 이미지 형식 검증 (jpg, jpeg, png, webp만 허용)
+        if (!ALLOWED_IMAGE_TYPES.includes(item.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+          e.preventDefault();
+          alert("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+          return;
+        }
+
         e.preventDefault();
         const blob = item.getAsFile();
         if (blob && onPasteImage) {
-          // Blob을 base64로 변환
+          // Blob을 base64로 변환 후 onPasteImage 호출 (즉시 업로드됨)
           const reader = new FileReader();
           reader.onload = (event) => {
             const base64 = event.target?.result as string;

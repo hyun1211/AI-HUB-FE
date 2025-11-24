@@ -59,6 +59,8 @@ export async function uploadFile(
   formData.append("modelId", modelId.toString());
 
   try {
+    console.log("[Upload] 파일 업로드 시작:", { fileName: file.name, modelId });
+
     const response = await fetch(`${API_BASE_URL}/api/v1/messages/files/upload`, {
       method: "POST",
       body: formData,
@@ -66,16 +68,22 @@ export async function uploadFile(
       // Content-Type은 자동으로 multipart/form-data로 설정됨 (boundary 포함)
     });
 
+    console.log("[Upload] 응답 상태:", response.status, response.statusText);
+
     const data: ApiResponse<MessageFileUploadResponse | ApiErrorDetail> =
       await response.json();
 
+    console.log("[Upload] 응답 데이터:", data);
+
     // 성공 응답
     if (response.ok && data.success) {
+      console.log("[Upload] 업로드 성공:", data.detail);
       return data as ApiResponse<MessageFileUploadResponse>;
     }
 
     // 에러 응답
     const errorDetail = data.detail as ApiErrorDetail;
+    console.error("[Upload] 업로드 실패:", errorDetail);
 
     switch (errorDetail.code) {
       case "VALIDATION_ERROR":

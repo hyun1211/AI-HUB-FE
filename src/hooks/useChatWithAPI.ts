@@ -3,6 +3,7 @@ import { Message } from "@/types/chat";
 import { sendMessageWithStreaming, getMessages, convertToUIMessages } from "@/lib/api/message";
 import { uploadFile } from "@/lib/api/upload";
 import { SSECompletedData } from "@/types/message";
+import { ALLOWED_IMAGE_TYPES } from "@/types/upload";
 
 interface UseChatOptions {
   roomId: string;
@@ -20,29 +21,37 @@ export function useChatWithAPI(options: UseChatOptions) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [pastedImage, setPastedImage] = useState<string | null>(null);
-  const [uploadedFileUrl, setUploadedFileUrl] = useState<string | null>(null);
+  const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // 파일 업로드 처리
+  // 파일 업로드 처리 (즉시 업로드하고 fileId 저장)
   const handleFileUpload = useCallback(
-    async (file: File) => {
+    async (file: File): Promise<{ fileId: string; fileUrl: string } | null> => {
       if (!modelId) {
         const error = new Error("AI 모델이 선택되지 않았습니다.");
         onError?.(error);
-        throw error;
+        return null;
+      }
+
+      // 이미지 형식 검증 (jpg, jpeg, png, webp만 허용)
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type as typeof ALLOWED_IMAGE_TYPES[number])) {
+        const error = new Error("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+        onError?.(error);
+        return null;
       }
 
       setIsUploadingFile(true);
       try {
         const response = await uploadFile(file, modelId);
-        // R2에 저장된 파일 URL 반환
+        // 업로드된 파일 ID 저장 (메시지 전송 시 사용)
+        const fileId = response.detail.fileId;
         const fileUrl = response.detail.fileUrl;
-        setUploadedFileUrl(fileUrl);
-        return fileUrl;
+        setUploadedFileId(fileId);
+        return { fileId, fileUrl };
       } catch (err) {
         const error = err instanceof Error ? err : new Error("파일 업로드 실패");
         onError?.(error);
-        throw error;
+        return null;
       } finally {
         setIsUploadingFile(false);
       }
@@ -50,12 +59,20 @@ export function useChatWithAPI(options: UseChatOptions) {
     [modelId, onError]
   );
 
-  // 이미지 데이터를 파일로 변환하여 업로드
+  // 이미지 데이터(base64)를 파일로 변환하여 즉시 업로드
   const uploadImageData = useCallback(
-    async (imageData: string) => {
+    async (imageData: string): Promise<{ fileId: string; fileUrl: string } | null> => {
       // base64 데이터를 Blob으로 변환
       const base64Data = imageData.split(",")[1];
       const mimeType = imageData.split(",")[0].split(":")[1].split(";")[0];
+
+      // 이미지 형식 검증
+      if (!ALLOWED_IMAGE_TYPES.includes(mimeType as typeof ALLOWED_IMAGE_TYPES[number])) {
+        const error = new Error("지원하지 않는 파일 형식입니다. jpg, jpeg, png, webp 이미지만 업로드 가능합니다.");
+        onError?.(error);
+        return null;
+      }
+
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
 
@@ -65,13 +82,16 @@ export function useChatWithAPI(options: UseChatOptions) {
 
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: mimeType });
-      const file = new File([blob], `pasted-image-${Date.now()}.png`, {
+
+      // 파일 확장자 결정
+      const ext = mimeType === "image/png" ? "png" : mimeType === "image/webp" ? "webp" : "jpg";
+      const file = new File([blob], `pasted-image-${Date.now()}.${ext}`, {
         type: mimeType,
       });
 
       return handleFileUpload(file);
     },
-    [handleFileUpload]
+    [handleFileUpload, onError]
   );
 
   // SSE 스트리밍으로 메시지 전송
@@ -81,7 +101,8 @@ export function useChatWithAPI(options: UseChatOptions) {
       imageData?: string | null,
       previousResponseId?: string
     ) => {
-      if ((!msg.trim() && !imageData) || isStreaming) return;
+      // 메시지가 없고 이미지도 없으면 전송 불가
+      if ((!msg.trim() && !imageData && !uploadedFileId) || isStreaming) return;
 
       // roomId가 없으면 먼저 채팅방 생성
       let currentRoomId = roomId;
@@ -101,17 +122,8 @@ export function useChatWithAPI(options: UseChatOptions) {
         return;
       }
 
-      let fileUrl: string | null = null;
-
-      // 이미지가 있으면 먼저 업로드
-      if (imageData) {
-        try {
-          fileUrl = await uploadImageData(imageData);
-        } catch (error) {
-          console.error("Image upload failed:", error);
-          return;
-        }
-      }
+      // 이미 업로드된 fileId 사용 (이미지 선택/붙여넣기 시 즉시 업로드됨)
+      const fileIdToSend = uploadedFileId;
 
       // 사용자 메시지 추가
       const userMessageId = Date.now().toString();
@@ -126,7 +138,7 @@ export function useChatWithAPI(options: UseChatOptions) {
       setMessages((prev) => [...prev, userMessage]);
       setIsStreaming(true);
       setPastedImage(null);
-      setUploadedFileUrl(null);
+      setUploadedFileId(null);
 
       // AI 응답 메시지 생성 (빈 내용으로 시작)
       const assistantMessageId = (Date.now() + 1).toString();
@@ -150,7 +162,7 @@ export function useChatWithAPI(options: UseChatOptions) {
           {
             message: msg,
             modelId,
-            fileUrl: fileUrl || undefined,
+            fileId: fileIdToSend || undefined,
             previousResponseId,
           },
           {
@@ -251,7 +263,7 @@ export function useChatWithAPI(options: UseChatOptions) {
       isStreaming,
       roomId,
       modelId,
-      uploadImageData,
+      uploadedFileId,
       onError,
       createRoom,
       onRoomCreated,
@@ -277,15 +289,17 @@ export function useChatWithAPI(options: UseChatOptions) {
     }
   }, []);
 
-  // 이미지 붙여넣기 처리
-  const handlePasteImage = useCallback((imageData: string) => {
+  // 이미지 붙여넣기 처리 (미리보기 설정 + 즉시 업로드)
+  const handlePasteImage = useCallback(async (imageData: string) => {
     setPastedImage(imageData);
-  }, []);
+    // 이미지를 붙여넣으면 즉시 업로드
+    await uploadImageData(imageData);
+  }, [uploadImageData]);
 
-  // 이미지 제거
+  // 이미지 제거 (삭제 시 fileId도 함께 제거)
   const removePastedImage = useCallback(() => {
     setPastedImage(null);
-    setUploadedFileUrl(null);
+    setUploadedFileId(null);
   }, []);
 
   // 특정 채팅방의 메시지 로드

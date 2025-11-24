@@ -15,6 +15,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
  */
 export async function getModels(): Promise<ApiResponse<AIModel[]>> {
   try {
+    console.log("[Models] 모델 목록 조회 시작, API_BASE_URL:", API_BASE_URL);
+
     const response = await fetch(`${API_BASE_URL}/api/v1/models`, {
       method: "GET",
       credentials: "include", // 쿠키 포함 (선택적)
@@ -23,16 +25,22 @@ export async function getModels(): Promise<ApiResponse<AIModel[]>> {
       },
     });
 
+    console.log("[Models] 응답 상태:", response.status, response.statusText);
+
     const data: ApiResponse<AIModel[]> | ApiResponse<ApiErrorDetail> =
       await response.json();
 
+    console.log("[Models] 응답 데이터:", data);
+
     // 성공 응답 (200 OK)
     if (response.ok && data.success) {
+      console.log("[Models] 모델 목록 조회 성공:", data.detail);
       return data as ApiResponse<AIModel[]>;
     }
 
     // 에러 응답
     const errorDetail = data.detail as ApiErrorDetail;
+    console.error("[Models] 모델 목록 조회 실패:", errorDetail);
 
     // 특정 에러 코드별 처리
     switch (errorDetail.code) {
