@@ -11,10 +11,11 @@ interface UseChatOptions {
   onError?: (error: Error) => void;
   createRoom?: () => Promise<string>;
   onRoomCreated?: (roomId: string) => void;
+  onMessageComplete?: () => void; // 메시지 전송 완료 시 호출
 }
 
 export function useChatWithAPI(options: UseChatOptions) {
-  const { roomId, modelId, onError, createRoom, onRoomCreated } = options;
+  const { roomId, modelId, onError, createRoom, onRoomCreated, onMessageComplete } = options;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
@@ -210,6 +211,8 @@ export function useChatWithAPI(options: UseChatOptions) {
               );
 
               setIsStreaming(false);
+              // 메시지 전송 완료 콜백 호출
+              onMessageComplete?.();
             },
             onError: (error) => {
               console.error("Streaming error:", error);
@@ -267,6 +270,7 @@ export function useChatWithAPI(options: UseChatOptions) {
       onError,
       createRoom,
       onRoomCreated,
+      onMessageComplete,
     ]
   );
 

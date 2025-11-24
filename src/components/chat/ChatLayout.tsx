@@ -83,7 +83,9 @@ export function ChatLayout() {
     },
     onRoomCreated: (newRoomId) => {
       setRoomId(newRoomId);
-      // 사이드바 채팅방 목록 새로고침
+    },
+    onMessageComplete: () => {
+      // 메시지 전송 완료 시 사이드바 채팅방 목록 새로고침
       setSidebarRefreshTrigger((prev) => prev + 1);
     },
   });
