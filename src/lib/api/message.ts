@@ -97,6 +97,7 @@ export async function sendMessageWithStreaming(
 
     let buffer = "";
     let currentEvent: string | null = null;
+    let eventDataLines: string[] = []; // 같은 이벤트의 여러 data: 라인을 누적
 
     while (true) {
       const { done, value } = await reader.read();
@@ -111,43 +112,51 @@ export async function sendMessageWithStreaming(
       buffer = lines.pop() || ""; // 마지막 불완전한 라인은 버퍼에 보관
 
       for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) {
-          // 빈 라인은 이벤트 구분자
+        // 빈 라인 = 이벤트 완료 (SSE 표준)
+        if (!line.trim()) {
+          // 누적된 data 라인들을 처리
+          if (currentEvent && eventDataLines.length > 0) {
+            // SSE 표준: 여러 data: 라인은 \n으로 연결
+            const data = eventDataLines.join("\n");
+
+            switch (currentEvent) {
+              case "started":
+                callbacks.onStart?.();
+                break;
+
+              case "delta":
+                callbacks.onDelta?.(data);
+                break;
+
+              case "completed":
+                try {
+                  const completedData: SSECompletedData = JSON.parse(data);
+                  callbacks.onCompleted?.(completedData);
+                } catch (e) {
+                }
+                break;
+            }
+          }
+
+          // 이벤트 초기화
           currentEvent = null;
+          eventDataLines = [];
           continue;
         }
 
-        // SSE 이벤트 파싱
-        if (trimmedLine.startsWith("event:")) {
-          currentEvent = trimmedLine.slice(6).trim();
+        // SSE 이벤트 타입 파싱 (event: 라인)
+        if (line.trim().startsWith("event:")) {
+          currentEvent = line.trim().slice(6).trim();
           continue;
         }
 
-        if (trimmedLine.startsWith("data:")) {
-          // SSE 표준: data: 뒤의 첫 번째 공백만 선택적 구분자로 제거, 나머지는 보존
-          let data = trimmedLine.slice(5);
-          if (data.startsWith(" ")) {
-            data = data.slice(1);
-          }
+        // data: 라인은 원본 사용 (공백 보존을 위해)
+        if (line.startsWith("data:")) {
+          // "data:" 제거, 그 뒤 내용은 공백 포함 모두 보존
+          const data = line.slice(5);
 
-          switch (currentEvent) {
-            case "started":
-              callbacks.onStart?.();
-              break;
-
-            case "delta":
-              callbacks.onDelta?.(data);
-              break;
-
-            case "completed":
-              try {
-                const completedData: SSECompletedData = JSON.parse(data);
-                callbacks.onCompleted?.(completedData);
-              } catch (e) {
-              }
-              break;
-          }
+          // 같은 이벤트의 data 라인들을 누적 (빈 문자열도 유효한 데이터)
+          eventDataLines.push(data);
         }
       }
     }
