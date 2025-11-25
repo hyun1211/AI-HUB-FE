@@ -157,7 +157,7 @@ export async function sendMessageWithStreaming(
           if (data.startsWith(" ")) {
             data = data.slice(1);
           }
-          // 같은 이벤트의 data 라인들을 누적
+          // 같은 이벤트의 data 라인들을 누적 (빈 문자열도 유효한 데이터)
           eventDataLines.push(data);
         }
       }

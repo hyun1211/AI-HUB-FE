@@ -11,6 +11,33 @@ import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Message } from "@/types/chat";
 import "katex/dist/katex.min.css";
 
+/**
+ * 서버에서 누락된 마크다운 공백을 자동으로 추가하는 함수
+ */
+function fixMarkdownSpacing(content: string): string {
+  return content
+    .split('\n')
+    .map(line => {
+      // 1. 제목: #제목 → # 제목
+      line = line.replace(/^(#{1,6})([^\s#])/gm, '$1 $2');
+
+      // 2. 순서 리스트: 1.항목 → 1. 항목
+      line = line.replace(/^(\s*)(\d+\.)([^\s])/gm, '$1$2 $3');
+
+      // 3. 체크박스: -[x]항목 → - [x] 항목, -[]항목 → - [ ] 항목
+      line = line.replace(/^(\s*)-\[x\]([^\s])/gm, '$1- [x] $2');
+      line = line.replace(/^(\s*)-\[x\]$/gm, '$1- [x]');
+      line = line.replace(/^(\s*)-\[\]([^\s])/gm, '$1- [ ] $2');
+      line = line.replace(/^(\s*)-\[\]$/gm, '$1- [ ]');
+
+      // 4. 일반 리스트: -항목 → - 항목 (체크박스가 아닌 경우만)
+      line = line.replace(/^(\s*)-([^\s\[])/gm, '$1- $2');
+
+      return line;
+    })
+    .join('\n');
+}
+
 interface MessageListProps {
   messages: Message[];
   isStreaming?: boolean;
@@ -99,6 +126,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                 <div className="font-['Pretendard:Regular',sans-serif] !text-[1.6rem] break-words markdown-content">
                   {message.role === "assistant" ? (
                     <ReactMarkdown
+                      key={`md-${message.id}-${message.content.length}`}
                       remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
                       rehypePlugins={[rehypeKatex]}
                       components={{
@@ -206,7 +234,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                         p: ({ children }) => <p className="my-2 !text-[1.6rem]">{children}</p>,
                       }}
                     >
-                      {message.content}
+                      {fixMarkdownSpacing(message.content)}
                     </ReactMarkdown>
                   ) : (
                     <span className="whitespace-pre-wrap">
