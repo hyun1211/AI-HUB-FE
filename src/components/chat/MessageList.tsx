@@ -15,27 +15,27 @@ import "katex/dist/katex.min.css";
  * 서버에서 누락된 마크다운 공백을 자동으로 추가하는 함수
  */
 function fixMarkdownSpacing(content: string): string {
-  return content
-    .split('\n')
-    .map(line => {
-      // 1. 제목: #제목 → # 제목
-      line = line.replace(/^(#{1,6})([^\s#])/gm, '$1 $2');
+  const lines = content.split('\n');
+  const fixedLines = lines.map((line) => {
+    // 1. 제목: #제목 → # 제목
+    line = line.replace(/^(#{1,6})([^\s#])/gm, '$1 $2');
 
-      // 2. 순서 리스트: 1.항목 → 1. 항목
-      line = line.replace(/^(\s*)(\d+\.)([^\s])/gm, '$1$2 $3');
+    // 2. 순서 리스트: 1.항목 → 1. 항목
+    line = line.replace(/^(\s*)(\d+\.)([^\s])/gm, '$1$2 $3');
 
-      // 3. 체크박스: -[x]항목 → - [x] 항목, -[]항목 → - [ ] 항목
-      line = line.replace(/^(\s*)-\[x\]([^\s])/gm, '$1- [x] $2');
-      line = line.replace(/^(\s*)-\[x\]$/gm, '$1- [x]');
-      line = line.replace(/^(\s*)-\[\]([^\s])/gm, '$1- [ ] $2');
-      line = line.replace(/^(\s*)-\[\]$/gm, '$1- [ ]');
+    // 3. 체크박스: -[x]항목 → - [x] 항목, -[]항목 → - [ ] 항목
+    line = line.replace(/^(\s*)-\[x\]([^\s])/gm, '$1- [x] $2');
+    line = line.replace(/^(\s*)-\[x\]$/gm, '$1- [x]');
+    line = line.replace(/^(\s*)-\[\]([^\s])/gm, '$1- [ ] $2');
+    line = line.replace(/^(\s*)-\[\]$/gm, '$1- [ ]');
 
-      // 4. 일반 리스트: -항목 → - 항목 (체크박스가 아닌 경우만)
-      line = line.replace(/^(\s*)-([^\s\[])/gm, '$1- $2');
+    // 4. 일반 리스트: -항목 → - 항목 (체크박스가 아닌 경우만)
+    line = line.replace(/^(\s*)-([^\s\[])/gm, '$1- $2');
 
-      return line;
-    })
-    .join('\n');
+    return line;
+  });
+
+  return fixedLines.join('\n');
 }
 
 interface MessageListProps {

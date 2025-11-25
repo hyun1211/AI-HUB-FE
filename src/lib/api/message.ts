@@ -152,11 +152,9 @@ export async function sendMessageWithStreaming(
 
         // data: 라인은 원본 사용 (공백 보존을 위해)
         if (line.startsWith("data:")) {
-          // SSE 표준: data: 뒤의 첫 번째 공백만 선택적 구분자로 제거
-          let data = line.slice(5);
-          if (data.startsWith(" ")) {
-            data = data.slice(1);
-          }
+          // "data:" 제거, 그 뒤 내용은 공백 포함 모두 보존
+          const data = line.slice(5);
+
           // 같은 이벤트의 data 라인들을 누적 (빈 문자열도 유효한 데이터)
           eventDataLines.push(data);
         }
