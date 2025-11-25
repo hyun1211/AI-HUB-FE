@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Message } from "@/types/chat";
 import { sendMessageWithStreaming, getMessages, convertToUIMessages } from "@/lib/api/message";
 import { uploadFile } from "@/lib/api/upload";
@@ -25,10 +25,19 @@ export function useChatWithAPI(options: UseChatOptions) {
   const [uploadedFileId, setUploadedFileId] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // 최신 modelId를 항상 참조하기 위한 ref
+  const modelIdRef = useRef(modelId);
+  modelIdRef.current = modelId;
+
+  // modelId 변경 감지
+  useEffect(() => {
+  }, [modelId]);
+
   // 파일 업로드 처리 (즉시 업로드하고 fileId 저장)
   const handleFileUpload = useCallback(
     async (file: File): Promise<{ fileId: string; fileUrl: string } | null> => {
-      if (!modelId) {
+      const currentModelId = modelIdRef.current;
+      if (!currentModelId) {
         const error = new Error("AI 모델이 선택되지 않았습니다.");
         onError?.(error);
         return null;
@@ -43,7 +52,7 @@ export function useChatWithAPI(options: UseChatOptions) {
 
       setIsUploadingFile(true);
       try {
-        const response = await uploadFile(file, modelId);
+        const response = await uploadFile(file, currentModelId);
         // 업로드된 파일 ID 저장 (메시지 전송 시 사용)
         const fileId = response.detail.fileId;
         const fileUrl = response.detail.fileUrl;
@@ -57,7 +66,7 @@ export function useChatWithAPI(options: UseChatOptions) {
         setIsUploadingFile(false);
       }
     },
-    [modelId, onError]
+    [onError]
   );
 
   // 이미지 데이터(base64)를 파일로 변환하여 즉시 업로드
@@ -157,11 +166,17 @@ export function useChatWithAPI(options: UseChatOptions) {
         // AbortController 생성
         abortControllerRef.current = new AbortController();
 
+        // 최신 modelId 사용
+        const currentModelId = modelIdRef.current;
+        if (!currentModelId) {
+          throw new Error("AI 모델이 선택되지 않았습니다.");
+        }
+
         await sendMessageWithStreaming(
           currentRoomId,
           {
             message: msg,
-            modelId,
+            modelId: currentModelId,
             fileId: fileIdToSend || undefined,
             previousResponseId,
           },
@@ -259,7 +274,6 @@ export function useChatWithAPI(options: UseChatOptions) {
     [
       isStreaming,
       roomId,
-      modelId,
       uploadedFileId,
       onError,
       createRoom,

@@ -6,7 +6,7 @@ interface WelcomeMessageProps {
   username?: string;
 }
 
-export function WelcomeMessage({ username = "chabin37" }: WelcomeMessageProps) {
+export function WelcomeMessage({ username = "이용자" }: WelcomeMessageProps) {
   return (
     <div className="absolute top-[20rem] left-[53px] right-[53px] z-20">
       <p className="font-['Pretendard:SemiBold',sans-serif] text-[36px] text-neutral-100 mb-[16px]">
