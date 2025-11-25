@@ -44,7 +44,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
       <div className="max-w-[800px] mx-auto space-y-6 py-6">
         {messages.map((message) => (
           <div
-            key={`${message.id}-${message.content.length}`}
+            key={message.id}
             className={`flex ${
               message.role === "user" ? "justify-end" : "justify-start"
             }`}
@@ -99,7 +99,6 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                 <div className="font-['Pretendard:Regular',sans-serif] !text-[1.6rem] break-words markdown-content">
                   {message.role === "assistant" ? (
                     <ReactMarkdown
-                      key={`md-${message.id}-${message.content.length}`}
                       remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
                       rehypePlugins={[rehypeKatex]}
                       components={{
