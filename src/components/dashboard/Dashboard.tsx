@@ -224,7 +224,7 @@ export function Dashboard({ onClose }: DashboardProps) {
                 : "bg-transparent hover:bg-[#2c2e30]"
             }`}
           >
-            DashBoard
+            대시보드
           </button>
           <button
             onClick={() => setActiveTab("pricing")}

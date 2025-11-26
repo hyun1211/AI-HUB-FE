@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import svgPathsMain from "@/assets/svgs/main";
 import { ALLOWED_EXTENSIONS, ALLOWED_IMAGE_TYPES } from "@/types/upload";
 
@@ -28,6 +28,24 @@ export function ChatInput({
   isUploadingFile,
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dots, setDots] = useState(".");
+
+  // 로딩 중일 때 점 애니메이션
+  useEffect(() => {
+    if (!isStreaming) {
+      setDots(".");
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setDots((prev) => {
+        if (prev === "...") return ".";
+        return prev + ".";
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isStreaming]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -133,7 +151,7 @@ export function ChatInput({
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onPaste={handlePaste}
-            placeholder={isStreaming ? "AI가 응답 중입니다..." : "궁금한 걸 입력해주세요..."}
+            placeholder={isStreaming ? `AI가 응답 중입니다${dots}` : "궁금한 걸 입력해주세요..."}
             className="w-full h-[87px] bg-transparent px-[10px] py-[15px] text-white font-['Pretendard:Regular',sans-serif] text-[15px] resize-none focus:outline-none placeholder:text-white disabled:opacity-50"
             onKeyDown={handleKeyDown}
             disabled={isStreaming}

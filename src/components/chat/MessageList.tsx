@@ -244,7 +244,39 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                   {message.role === "assistant" &&
                     isStreaming &&
                     message.id === messages[messages.length - 1]?.id && (
-                      <span className="inline-block w-[2px] h-[16px] bg-white ml-1 animate-pulse" />
+                      <span className="inline-flex gap-1 ml-2">
+                        <span
+                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          style={{
+                            animation: 'dotBlink 1.4s infinite',
+                            animationDelay: '0s'
+                          }}
+                        />
+                        <span
+                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          style={{
+                            animation: 'dotBlink 1.4s infinite',
+                            animationDelay: '0.2s'
+                          }}
+                        />
+                        <span
+                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          style={{
+                            animation: 'dotBlink 1.4s infinite',
+                            animationDelay: '0.4s'
+                          }}
+                        />
+                        <style jsx>{`
+                          @keyframes dotBlink {
+                            0%, 60%, 100% {
+                              opacity: 0;
+                            }
+                            30% {
+                              opacity: 1;
+                            }
+                          }
+                        `}</style>
+                      </span>
                     )}
                 </div>
               )}

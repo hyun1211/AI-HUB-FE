@@ -16,7 +16,7 @@ function getCookie(name: string): string | null {
 
 interface MenuItemProps {
   icon: string;
-  label: string;
+  label: React.ReactNode;
   onClick?: () => void;
 }
 
@@ -90,7 +90,15 @@ export function SettingsMenu({ isOpen, onClose, onBalanceClick }: SettingsMenuPr
         <div className="space-y-1">
           <MenuItem icon="/logout.svg" label="로그아웃" onClick={handleLogout} />
           <MenuItem icon="/wallet.svg" label="잔액 조회" onClick={handleBalance} />
-          <MenuItem icon="/coin.svg" label="코인 거래 내역 조회" onClick={handleHistory} />
+          <MenuItem
+            icon="/coin.svg"
+            label={
+              <>
+                코인 거래 내역 조회 <span className="text-white text-[12px] ml-1">(임시)</span>
+              </>
+            }
+            onClick={handleHistory}
+          />
         </div>
       </div>
     </>

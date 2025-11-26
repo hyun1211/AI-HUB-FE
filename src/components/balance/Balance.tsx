@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import svgPathsBalance from "@/assets/svgs/balance";
 import { useWallet } from "@/hooks/useWallet";
 
@@ -62,6 +62,17 @@ export function Balance({ onBack }: BalanceProps) {
     },
   });
 
+  const [spinKey, setSpinKey] = useState(0);
+
+  // 새로고침 핸들러 (회전 애니메이션 포함)
+  const handleRefresh = async () => {
+    if (isLoading) return;
+
+    // key를 변경하여 애니메이션 재시작
+    setSpinKey((prev) => prev + 1);
+    await refresh();
+  };
+
   // 페이지 진입 시 한 번만 데이터 로드
   useEffect(() => {
     fetchWallet();
@@ -94,12 +105,13 @@ export function Balance({ onBack }: BalanceProps) {
 
           {/* Refresh Button */}
           <button
-            onClick={refresh}
+            onClick={handleRefresh}
             disabled={isLoading}
             className="h-[35px] rounded-[5px] px-4 hover:bg-[#2c2e30] transition-colors border border-[#444648] flex items-center justify-center disabled:opacity-50"
           >
             <svg
-              className={`size-[20px] ${isLoading ? "animate-spin" : ""}`}
+              key={spinKey}
+              className={`size-[20px] ${spinKey > 0 ? 'animate-spin-once' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -111,6 +123,19 @@ export function Balance({ onBack }: BalanceProps) {
                 strokeWidth="2"
               />
             </svg>
+            <style jsx>{`
+              @keyframes spin-once {
+                from {
+                  transform: rotate(0deg);
+                }
+                to {
+                  transform: rotate(360deg);
+                }
+              }
+              .animate-spin-once {
+                animation: spin-once 0.6s ease-in-out;
+              }
+            `}</style>
           </button>
         </div>
 
