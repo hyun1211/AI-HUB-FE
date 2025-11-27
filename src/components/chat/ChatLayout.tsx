@@ -9,9 +9,11 @@ import { SuggestedPrompts } from "./SuggestedPrompts";
 import { MessageList } from "./MessageList";
 import { Dashboard } from "../dashboard/Dashboard";
 import { Balance } from "../balance/Balance";
+import { BalanceWarning } from "./BalanceWarning";
 import { useChatWithAPI } from "@/hooks/useChatWithAPI";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { createChatRoom } from "@/lib/api/room";
+import { getWalletBalance } from "@/lib/api/wallet";
 import svgPathsMain from "@/assets/svgs/main";
 
 // 채팅방 제목 생성 함수 (현재 시간 기반)
@@ -35,6 +37,8 @@ export function ChatLayout() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
+  const [hasInsufficientBalance, setHasInsufficientBalance] = useState(false);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
 
   // 채팅방 생성 함수
   const createNewChatRoom = useCallback(async (modelId: number) => {
@@ -53,6 +57,34 @@ export function ChatLayout() {
       setIsCreatingRoom(false);
     }
   }, []);
+
+  // 채팅방 입장 시 잔액 체크
+  const checkBalanceOnRoomEnter = useCallback(async () => {
+    try {
+      const balanceResponse = await getWalletBalance();
+      const currentBalance = balanceResponse.detail.balance;
+
+      if (currentBalance < 0) {
+        setWarningMessage("현재 잔액이 부족합니다. 코인을 충전해주세요.");
+        setHasInsufficientBalance(true);
+      } else if (currentBalance <= 10) {
+        setWarningMessage(`현재 남은 코인은 ${currentBalance.toFixed(2)}개입니다.`);
+        setHasInsufficientBalance(false);
+      } else {
+        setWarningMessage(null);
+        setHasInsufficientBalance(false);
+      }
+    } catch (error) {
+      console.error("잔액 조회 실패:", error);
+    }
+  }, []);
+
+  // roomId 변경 시 잔액 체크 (새 채팅방 입장 시)
+  useEffect(() => {
+    if (roomId) {
+      checkBalanceOnRoomEnter();
+    }
+  }, [roomId, checkBalanceOnRoomEnter]);
 
   // 첫 메시지 전송 시 채팅방이 자동 생성됨 (useChatWithAPI의 createRoom 콜백 사용)
 
@@ -101,6 +133,42 @@ export function ChatLayout() {
     } catch (error) {
     }
   }, [selectedModelId, isCreatingRoom, createNewChatRoom, clearMessages]);
+
+  // 잔액 체크를 포함한 메시지 전송 핸들러
+  const handleSubmitWithBalanceCheck = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      // 메시지가 없거나 스트리밍 중이면 전송하지 않음
+      if ((!message.trim() && !pastedImage) || isStreaming || isUploadingFile) {
+        return;
+      }
+
+      try {
+        // 1. 잔액 조회
+        const balanceResponse = await getWalletBalance();
+        const currentBalance = balanceResponse.detail.balance;
+
+        // 2. 잔액이 0 미만인지 체크
+        if (currentBalance < 0) {
+          setHasInsufficientBalance(true);
+          setWarningMessage("현재 잔액이 부족합니다. 코인을 충전해주세요.");
+          return;
+        }
+
+        // 3. 잔액이 충분하면 정상적으로 메시지 전송
+        setHasInsufficientBalance(false);
+        handleSendMessage(message, pastedImage);
+        setMessage("");
+      } catch (error) {
+        console.error("잔액 조회 실패:", error);
+        // 잔액 조회 실패 시에도 메시지 전송은 허용 (API 에러 처리)
+        handleSendMessage(message, pastedImage);
+        setMessage("");
+      }
+    },
+    [message, pastedImage, isStreaming, isUploadingFile, handleSendMessage, setMessage]
+  );
 
   // 채팅방 클릭 핸들러 (사이드바에서 채팅방 선택 시)
   const handleChatRoomClick = useCallback(async (clickedRoomId: string) => {
@@ -219,17 +287,28 @@ export function ChatLayout() {
         {/* Message List - show when there are messages */}
         <MessageList messages={messages} isStreaming={isStreaming} />
 
+        {/* Balance Warning - show above Chat Input */}
+        <div className="absolute bottom-[120px] left-0 right-0 flex justify-center">
+          {warningMessage && (
+            <BalanceWarning
+              message={warningMessage}
+              onDismiss={() => setWarningMessage(null)}
+            />
+          )}
+        </div>
+
         {/* Chat Input */}
         <ChatInput
           message={message}
           setMessage={setMessage}
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmitWithBalanceCheck}
           isStreaming={isStreaming || isCreatingRoom || !selectedModelId}
           pastedImage={pastedImage}
           onPasteImage={handlePasteImage}
           onRemoveImage={removePastedImage}
           onFileSelect={handleFileUpload}
           isUploadingFile={isUploadingFile}
+          hasInsufficientBalance={hasInsufficientBalance}
         />
       </div>
     </div>

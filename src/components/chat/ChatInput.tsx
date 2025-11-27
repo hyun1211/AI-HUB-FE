@@ -14,6 +14,7 @@ interface ChatInputProps {
   onRemoveImage?: () => void;
   onFileSelect?: (file: File) => void;
   isUploadingFile?: boolean;
+  hasInsufficientBalance?: boolean;
 }
 
 export function ChatInput({
@@ -26,6 +27,7 @@ export function ChatInput({
   onRemoveImage,
   onFileSelect,
   isUploadingFile,
+  hasInsufficientBalance,
 }: ChatInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dots, setDots] = useState(".");
@@ -192,12 +194,13 @@ export function ChatInput({
           <button
             type="submit"
             className="absolute right-[8px] bottom-[15px] size-[31px] hover:opacity-80 transition-opacity disabled:opacity-50"
-            disabled={(!message.trim() && !pastedImage) || isStreaming}
+            disabled={(!message.trim() && !pastedImage) || isStreaming || hasInsufficientBalance}
+            title={hasInsufficientBalance ? "토큰이 부족합니다" : undefined}
           >
             <div className="absolute inset-[-3.333%]">
               <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 32 32">
                 <g>
-                  <path d={svgPathsMain.p34245700} fill={(message.trim() || pastedImage) ? "#E0E0E0" : "rgba(224, 224, 224, 0.3)"} fillOpacity={(message.trim() || pastedImage) ? "1" : "0.5"} />
+                  <path d={svgPathsMain.p34245700} fill={(message.trim() || pastedImage) && !hasInsufficientBalance ? "#E0E0E0" : "rgba(224, 224, 224, 0.3)"} fillOpacity={(message.trim() || pastedImage) && !hasInsufficientBalance ? "1" : "0.5"} />
                   <path d={svgPathsMain.p362c24f0} fill="#444648" />
                 </g>
               </svg>

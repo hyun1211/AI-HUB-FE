@@ -17,7 +17,9 @@ function formatDate(isoString: string): string {
 }
 
 function formatNumber(num: number): string {
-  return num.toLocaleString("ko-KR", {
+  // -0 또는 매우 작은 음수를 0으로 처리
+  const normalizedNum = num < 0 && num > -0.01 ? 0 : num;
+  return normalizedNum.toLocaleString("ko-KR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
