@@ -114,6 +114,12 @@ export function useChatWithAPI(options: UseChatOptions) {
       // 메시지가 없고 이미지도 없으면 전송 불가
       if ((!msg.trim() && !imageData && !uploadedFileId) || isStreaming) return;
 
+      // 이미지가 있는데 fileId가 없으면 업로드 진행 중이거나 실패한 상태
+      if (imageData && !uploadedFileId) {
+        onError?.(new Error("이미지 업로드가 완료되지 않았습니다. 잠시 후 다시 시도해주세요."));
+        return;
+      }
+
       // roomId가 없으면 먼저 채팅방 생성
       let currentRoomId = roomId;
       if (!currentRoomId && createRoom) {
@@ -175,7 +181,7 @@ export function useChatWithAPI(options: UseChatOptions) {
         await sendMessageWithStreaming(
           currentRoomId,
           {
-            message: msg,
+            message: msg.trim() || "[이미지]",
             modelId: currentModelId,
             fileId: fileIdToSend || undefined,
             previousResponseId,

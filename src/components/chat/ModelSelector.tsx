@@ -56,8 +56,8 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
   if (isLoading) {
     return (
       <div className="flex-1 flex justify-center">
-        <div className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-[#444648] flex items-center justify-center">
-          <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[15px]">
+        <div className="h-11 sm:h-10 md:h-[35px] rounded-[5px] min-w-[155px] sm:min-w-[145px] md:min-w-[140px] px-4 sm:px-3 md:px-3 border border-[#444648] flex items-center justify-center">
+          <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[15px] sm:text-[14px] md:text-[15px]">
             로딩 중...
           </p>
         </div>
@@ -69,8 +69,8 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
   if (error || models.length === 0) {
     return (
       <div className="flex-1 flex justify-center">
-        <div className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-red-500/50 flex items-center justify-center">
-          <p className="font-['Pretendard:Regular',sans-serif] text-red-400 text-[13px]">
+        <div className="h-11 sm:h-10 md:h-[35px] rounded-[5px] min-w-[155px] sm:min-w-[145px] md:min-w-[140px] px-4 sm:px-3 md:px-3 border border-red-500/50 flex items-center justify-center">
+          <p className="font-['Pretendard:Regular',sans-serif] text-red-400 text-[13px] sm:text-[13px] md:text-[13px]">
             {error || "사용 가능한 모델이 없습니다"}
           </p>
         </div>
@@ -83,12 +83,12 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
       <div className="flex items-center relative" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="h-[35px] rounded-[5px] min-w-[140px] px-3 border border-[#444648] flex items-center! justify-between gap-2 hover:border-[#666] transition-colors"
+          className="h-11 sm:h-10 md:h-[35px] rounded-[5px] min-w-[155px] sm:min-w-[145px] md:min-w-[140px] px-4 sm:px-3 md:px-3 border border-[#444648] flex items-center justify-between gap-2 sm:gap-2 hover:border-[#666] transition-colors"
         >
-          <p className="font-['Pretendard:Regular',sans-serif] text-[#e0e0e0] text-[15px] truncate">
+          <p className="font-['Pretendard:Regular',sans-serif] text-[#e0e0e0] text-[15px] sm:text-[14px] md:text-[15px] truncate">
             {selectedModel?.displayName || "모델 선택"}
           </p>
-          <div className="h-[17px] w-[13px] flex-shrink-0 relative flex items-center justify-center">
+          <div className="h-[17px] w-[13px] sm:h-4 sm:w-3 md:h-[17px] md:w-[13px] flex-shrink-0 relative flex items-center justify-center">
             <div
               className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
             >
@@ -110,22 +110,22 @@ export function ModelSelector({ onModelChange }: ModelSelectorProps) {
         </button>
 
         {isOpen && (
-          <div className="absolute top-[3.5rem] left-0 bg-zinc-950 rounded-[8px] border border-zinc-800 z-50 shadow-lg w-[calc(100vw-4rem)] max-w-[30rem] p-3">
-            <div className="flex flex-col gap-2">
+          <div className="absolute top-[3.2rem] sm:top-[3.0rem] md:top-[3.5rem] left-0 bg-zinc-950 rounded-[6px] sm:rounded-[8px] border border-zinc-800 z-50 shadow-lg w-[calc(100vw-2rem)] sm:w-[calc(100vw-3rem)] md:w-[calc(100vw-4rem)] max-w-[30rem] p-2.5 sm:p-2.5 md:p-3">
+            <div className="flex flex-col gap-2 sm:gap-2">
               {models.map((model) => (
                 <button
                   key={model.modelId}
                   onClick={() => handleSelectModel(model)}
-                  className={`bg-zinc-900/50 min-h-[7rem] w-full text-left pl-[2.7rem] py-[1.4rem] hover:bg-zinc-800 transition-colors rounded-md ${
+                  className={`bg-zinc-900/50 min-h-[6.2rem] sm:min-h-[6.2rem] md:min-h-[7rem] w-full text-left pl-3 sm:pl-[2.2rem] md:pl-[2.7rem] py-3 sm:py-[1.2rem] md:py-[1.4rem] pr-3 sm:pr-3 hover:bg-zinc-800 transition-colors rounded-md ${
                     selectedModel?.modelId === model.modelId
                       ? "ring-2 ring-[#ff983f] bg-zinc-800 relative z-10"
                       : ""
                   }`}
                 >
-                  <p className="font-['Pretendard:SemiBold',sans-serif] text-[16px] text-neutral-50 mb-1">
+                  <p className="font-['Pretendard:SemiBold',sans-serif] text-[15px] sm:text-[15px] md:text-[16px] text-neutral-50 mb-1 sm:mb-1">
                     {model.displayName}
                   </p>
-                  <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[13px] leading-relaxed">
+                  <p className="font-['Pretendard:Regular',sans-serif] text-[#898991] text-[13px] sm:text-[13px] md:text-[13px] leading-relaxed">
                     {model.displayExplain}
                   </p>
                 </button>

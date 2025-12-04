@@ -140,7 +140,13 @@ export function ChatLayout() {
       e.preventDefault();
 
       // 메시지가 없거나 스트리밍 중이면 전송하지 않음
-      if ((!message.trim() && !pastedImage) || isStreaming || isUploadingFile) {
+      if ((!message.trim() && !pastedImage) || isStreaming) {
+        return;
+      }
+
+      // 파일 업로드 중이면 전송하지 않음
+      if (isUploadingFile) {
+        setWarningMessage("이미지 업로드 중입니다. 잠시만 기다려주세요.");
         return;
       }
 
@@ -227,15 +233,15 @@ export function ChatLayout() {
         <div className="absolute bg-zinc-950 inset-0" />
 
         {/* Top Navigation */}
-        <div className="absolute top-0 left-0 right-0 h-[75px] flex items-center px-[21px] z-30">
+        <div className="absolute top-0 left-0 right-0 h-[58px] sm:h-[65px] md:h-[75px] flex items-center px-3 sm:px-4 md:px-[21px] z-30">
           {/* Left Section: Menu Button and Model Selector */}
-          <div className="flex  gap-[36px]">
+          <div className="flex gap-4 sm:gap-6 md:gap-[36px]">
             {/* Menu Button */}
             <button
               onClick={() => {
                 setSidebarOpen(!sidebarOpen);
               }}
-              className="h-[35px] w-[48px] hover:opacity-80 transition-opacity"
+              className="h-16 w-[50px] sm:h-12 sm:w-[52px] md:h-[35px] md:w-[42px] hover:opacity-80 transition-opacity"
             >
               <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 48 35">
                 <g>
@@ -257,9 +263,9 @@ export function ChatLayout() {
           <button
             onClick={handleNewChat}
             disabled={isCreatingRoom}
-            className="h-[35px] rounded-[5px] px-4 border border-[#ff983f] flex items-center gap-2 hover:bg-[#ff983f]/10 transition-colors ml-auto disabled:opacity-50"
+            className="h-11 sm:h-10 md:h-[35px] rounded-[5px] px-5 sm:px-4 md:px-4 border border-[#ff983f] flex items-center gap-2 sm:gap-2 hover:bg-[#ff983f]/10 transition-colors ml-auto disabled:opacity-50"
           >
-            <div className="size-[11px]">
+            <div className="size-[13px] sm:size-[12px] md:size-[1px]">
               <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 13 13">
                 <path d="M6.5 1L6.5 12M12 6.5L1 6.5" stroke="url(#paint0_linear_new_chat)" strokeLinecap="round" strokeWidth="2" />
                 <defs>
@@ -270,7 +276,7 @@ export function ChatLayout() {
                 </defs>
               </svg>
             </div>
-            <span className="bg-[#ff983f] bg-clip-text font-['Pretendard:Regular',sans-serif] text-[15px] hidden sm:inline" style={{ WebkitTextFillColor: "transparent" }}>
+            <span className="bg-[#ff983f] bg-clip-text font-['Pretendard:Regular',sans-serif] text-[15px] sm:text-[15px] md:text-[15px] hidden sm:inline" style={{ WebkitTextFillColor: "transparent" }}>
               New Chat
             </span>
           </button>
@@ -288,7 +294,7 @@ export function ChatLayout() {
         <MessageList messages={messages} isStreaming={isStreaming} />
 
         {/* Balance Warning - show above Chat Input */}
-        <div className="absolute bottom-[120px] left-0 right-0 flex justify-center">
+        <div className="absolute bottom-[115px] sm:bottom-[120px] md:bottom-[120px] left-0 right-0 flex justify-center">
           {warningMessage && (
             <BalanceWarning
               message={warningMessage}

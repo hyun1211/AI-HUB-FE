@@ -13,7 +13,7 @@ export interface ApiMessage {
 
 // 메시지 전송 요청 타입
 export interface SendMessageRequest {
-  message: string; // 최대 4,000자
+  message: string; // 최대 4,000자, 사진만 전송 시 빈 문자열 가능
   modelId: number; // 채팅방에 허용된 모델
   fileId?: string; // 업로드 파일 ID (선택, 업로드 API에서 반환받은 ID)
   previousResponseId?: string; // 이전 AI 응답 ID (선택)

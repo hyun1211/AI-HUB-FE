@@ -36,8 +36,9 @@ export async function sendMessageWithStreaming(
     throw new Error("메시지는 최대 4,000자까지 입력 가능합니다.");
   }
 
-  if (!request.message.trim()) {
-    throw new Error("메시지를 입력해주세요.");
+  // 메시지가 비어있고 fileId도 없으면 오류
+  if (!request.message.trim() && !request.fileId) {
+    throw new Error("메시지를 입력하거나 파일을 첨부해주세요.");
   }
 
   try {

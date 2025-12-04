@@ -67,8 +67,8 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
   }
 
   return (
-    <div className="absolute top-[75px] bottom-[120px] left-0 right-0 overflow-y-auto px-[21px] z-20 scrollbar-hide">
-      <div className="max-w-[800px] mx-auto space-y-6 py-6">
+    <div className="absolute top-[58px] sm:top-[65px] md:top-[75px] bottom-[90px] sm:bottom-[105px] md:bottom-[120px] left-0 right-0 overflow-y-auto px-3 sm:px-4 md:px-[21px] z-20 scrollbar-hide">
+      <div className="max-w-[800px] mx-auto space-y-4 sm:space-y-5 md:space-y-6 py-4 sm:py-5 md:py-6">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -77,19 +77,19 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
             }`}
           >
             <div
-              className={`max-w-[100%] rounded-[12px]  py-3 relative group ${
+              className={`max-w-[100%] rounded-[8px] sm:rounded-[10px] md:rounded-[12px] py-2 sm:py-2.5 md:py-3 relative group ${
                 message.role === "user"
-                  ? "bg-[#ff983f] text-white px-3"
+                  ? "bg-[#ff983f] text-white px-2 sm:px-2.5 md:px-3"
                   : "bg-transparent text-white"
               }`}
             >
               {/* 이미지가 있으면 표시 */}
               {message.image && (
-                <div className="mb-2">
+                <div className="mb-1.5 sm:mb-2">
                   <img
                     src={message.image}
                     alt="Attached"
-                    className="max-w-full max-h-[200px] rounded-[8px]"
+                    className="max-w-full max-h-[150px] sm:max-h-[180px] md:max-h-[200px] rounded-[6px] sm:rounded-[8px]"
                   />
                 </div>
               )}
@@ -98,12 +98,12 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
               {message.role === "assistant" && (
                 <button
                   onClick={() => handleCopy(message.content, message.id)}
-                  className="absolute bottom-[-1rem] left-2 p-1.5 rounded hover:bg-[rgba(255,255,255,0.1)] transition-all"
+                  className="absolute bottom-[-0.8rem] sm:bottom-[-1rem] left-1 sm:left-2 p-1 sm:p-1.5 rounded hover:bg-[rgba(255,255,255,0.1)] transition-all"
                   title="복사"
                 >
                   {copiedId === message.id ? (
                     <svg
-                      className="w-5 h-5 text-green-400"
+                      className="w-4 h-4 sm:w-5 sm:h-5 text-green-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -116,14 +116,14 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                       />
                     </svg>
                   ) : (
-                    <img src="/copy-left.svg" alt="복사" className="w-5 h-5" />
+                    <img src="/copy-left.svg" alt="복사" className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                 </button>
               )}
 
               {/* 메시지 내용 */}
               {message.content && (
-                <div className="font-['Pretendard:Regular',sans-serif] !text-[1.6rem] break-words markdown-content">
+                <div className="font-['Pretendard:Regular',sans-serif] text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem] break-words markdown-content">
                   {message.role === "assistant" ? (
                     <ReactMarkdown
                       key={`md-${message.id}-${message.content.length}`}
@@ -136,7 +136,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                           const isInline = !match;
                           return isInline ? (
                             <code
-                              className="bg-[rgba(255,255,255,0.1)] px-1.5 py-0.5 rounded text-[#ff983f] !text-[1.6rem]"
+                              className="bg-[rgba(255,255,255,0.1)] px-1 sm:px-1.5 py-0.5 rounded text-[#ff983f] text-[1.2rem] sm:text-[1.4rem] md:text-[1.6rem]"
                               {...props}
                             >
                               {children}
@@ -149,7 +149,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                               customStyle={{
                                 margin: 0,
                                 borderRadius: "0.5rem",
-                                fontSize: "1.4rem",
+                                fontSize: "clamp(1.1rem, 2vw, 1.4rem)",
                               }}
                             >
                               {String(children).replace(/\n$/, "")}
@@ -164,7 +164,7 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                         // 링크 스타일링
                         a: ({ children, ...props }) => (
                           <a
-                            className="text-[#ff983f] hover:underline !text-[1.6rem]"
+                            className="text-[#ff983f] hover:underline text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]"
                             target="_blank"
                             rel="noopener noreferrer"
                             {...props}
@@ -174,64 +174,64 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                         ),
                         // 리스트 스타일링
                         ul: ({ children }) => (
-                          <ul className="list-disc list-inside my-2 space-y-1 !text-[1.6rem]">
+                          <ul className="list-disc list-inside my-1.5 sm:my-2 space-y-0.5 sm:space-y-1 text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                             {children}
                           </ul>
                         ),
                         ol: ({ children }) => (
-                          <ol className="list-decimal list-inside my-2 space-y-1 !text-[1.6rem]">
+                          <ol className="list-decimal list-inside my-1.5 sm:my-2 space-y-0.5 sm:space-y-1 text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                             {children}
                           </ol>
                         ),
                         li: ({ children }) => (
-                          <li className="!text-[1.6rem]">{children}</li>
+                          <li className="text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">{children}</li>
                         ),
                         // 인용구 스타일링
                         blockquote: ({ children }) => (
-                          <blockquote className="border-l-4 border-[#ff983f] pl-4 my-2 italic opacity-80 !text-[1.6rem]">
+                          <blockquote className="border-l-2 sm:border-l-4 border-[#ff983f] pl-2 sm:pl-4 my-1.5 sm:my-2 italic opacity-80 text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                             {children}
                           </blockquote>
                         ),
                         // 제목 스타일링
                         h1: ({ children }) => (
-                          <h1 className="!text-[2.4rem] font-bold mt-4 mb-2">
+                          <h1 className="text-[1.8rem] sm:text-[2.1rem] md:text-[2.4rem] font-bold mt-3 sm:mt-4 mb-1.5 sm:mb-2">
                             {children}
                           </h1>
                         ),
                         h2: ({ children }) => (
-                          <h2 className="!text-[2rem] font-bold mt-3 mb-2">
+                          <h2 className="text-[1.6rem] sm:text-[1.8rem] md:text-[2rem] font-bold mt-2.5 sm:mt-3 mb-1.5 sm:mb-2">
                             {children}
                           </h2>
                         ),
                         h3: ({ children }) => (
-                          <h3 className="!text-[1.8rem] font-bold mt-2 mb-1">
+                          <h3 className="text-[1.5rem] sm:text-[1.65rem] md:text-[1.8rem] font-bold mt-2 mb-1">
                             {children}
                           </h3>
                         ),
                         // 테이블 스타일링
                         table: ({ children }) => (
-                          <div className="overflow-x-auto my-2">
-                            <table className="border-collapse border border-[#444648] w-full !text-[1.6rem]">
+                          <div className="overflow-x-auto my-1.5 sm:my-2">
+                            <table className="border-collapse border border-[#444648] w-full text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                               {children}
                             </table>
                           </div>
                         ),
                         th: ({ children }) => (
-                          <th className="border border-[#444648] px-3 py-2 bg-[rgba(255,255,255,0.05)] !text-[1.6rem]">
+                          <th className="border border-[#444648] px-2 sm:px-3 py-1.5 sm:py-2 bg-[rgba(255,255,255,0.05)] text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                             {children}
                           </th>
                         ),
                         td: ({ children }) => (
-                          <td className="border border-[#444648] px-3 py-2 !text-[1.6rem]">
+                          <td className="border border-[#444648] px-2 sm:px-3 py-1.5 sm:py-2 text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">
                             {children}
                           </td>
                         ),
                         // 수평선 스타일링
                         hr: () => (
-                          <hr className="my-4 border-t border-[#444648]" />
+                          <hr className="my-3 sm:my-4 border-t border-[#444648]" />
                         ),
                         // 단락 스타일링
-                        p: ({ children }) => <p className="my-2 !text-[1.6rem]">{children}</p>,
+                        p: ({ children }) => <p className="my-1.5 sm:my-2 text-[1.3rem] sm:text-[1.45rem] md:text-[1.6rem]">{children}</p>,
                       }}
                     >
                       {fixMarkdownSpacing(message.content)}
@@ -244,23 +244,23 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
                   {message.role === "assistant" &&
                     isStreaming &&
                     message.id === messages[messages.length - 1]?.id && (
-                      <span className="inline-flex gap-1 ml-2">
+                      <span className="inline-flex gap-0.5 sm:gap-1 ml-1.5 sm:ml-2">
                         <span
-                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          className="w-[3px] h-[3px] sm:w-[4px] sm:h-[4px] bg-white rounded-full"
                           style={{
                             animation: 'dotBlink 1.4s infinite',
                             animationDelay: '0s'
                           }}
                         />
                         <span
-                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          className="w-[3px] h-[3px] sm:w-[4px] sm:h-[4px] bg-white rounded-full"
                           style={{
                             animation: 'dotBlink 1.4s infinite',
                             animationDelay: '0.2s'
                           }}
                         />
                         <span
-                          className="w-[4px] h-[4px] bg-white rounded-full"
+                          className="w-[3px] h-[3px] sm:w-[4px] sm:h-[4px] bg-white rounded-full"
                           style={{
                             animation: 'dotBlink 1.4s infinite',
                             animationDelay: '0.4s'
@@ -282,19 +282,19 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
               )}
 
               {/* 메시지 하단 정보 (시간, 토큰) */}
-              <div className={`flex items-center gap-2 mt-2 text-[11px] ${
+              <div className={`flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] md:text-[11px] ${
                 message.role === "user" ? "justify-end" : "justify-start"
               }`}>
                 {/* 토큰 표시 - 사용자 메시지 (흰색) */}
                 {message.role === "user" && message.metadata?.inputTokens && (
-                  <span className="text-[10px] text-white/80">
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] text-white/80">
                     {message.metadata.inputTokens.toLocaleString()} tokens
                   </span>
                 )}
 
                 {/* 토큰 표시 - AI 응답 (회색) */}
                 {message.role === "assistant" && message.metadata?.outputTokens && (
-                  <span className="text-[10px] text-[#929292]">
+                  <span className="text-[8px] sm:text-[9px] md:text-[10px] text-[#929292]">
                     {message.metadata.outputTokens.toLocaleString()} tokens
                   </span>
                 )}
